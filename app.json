@@ -4,10 +4,10 @@
     "slug": "rugby-flow",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/images/pitchside.png",
+    "icon": "./assets/images/4b495c8d-303a-40bf-a74a-d3725f478b34-2026-05-03_1777818414969.png",
     "userInterfaceStyle": "automatic",
     "splash": {
-      "image": "./assets/images/pitchside.png",
+      "image": "./assets/images/4b495c8d-303a-40bf-a74a-d3725f478b34-2026-05-03_1777818414969.png",
       "resizeMode": "contain",
       "backgroundColor": "#FFFFFF"
     },
@@ -20,7 +20,7 @@
     },
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "./assets/images/pitchside.png",
+        "foregroundImage": "./assets/images/4b495c8d-303a-40bf-a74a-d3725f478b34-2026-05-03_1777818414969.png",
         "backgroundColor": "#FFFFFF"
       },
       "package": "com.placeholder.app"
