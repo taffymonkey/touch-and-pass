@@ -1,0 +1,47 @@
+{
+  "expo": {
+    "name": "Rugby Flow",
+    "slug": "rugby-flow",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/images/pitchside.png",
+    "userInterfaceStyle": "automatic",
+    "splash": {
+      "image": "./assets/images/pitchside.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#FFFFFF"
+    },
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.sportivelogic.pitchside",
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/images/pitchside.png",
+        "backgroundColor": "#FFFFFF"
+      },
+      "package": "com.placeholder.app"
+    },
+    "web": {
+      "favicon": "./assets/images/newly.png",
+      "bundler": "metro"
+    },
+    "plugins": [
+      "expo-font",
+      "expo-router",
+      "expo-web-browser",
+      "expo-secure-store"
+    ],
+    "scheme": "rugbyflow",
+    "experiments": {
+      "typedRoutes": true
+    },
+    "extra": {
+      "router": {},
+      "backendUrl": "https://ggr5mw498a2953kypgkfkkwsubrg5vu2.app.specular.dev"
+    }
+  }
+}
