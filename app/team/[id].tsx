@@ -44,6 +44,8 @@ interface TeamDetail {
     name: string;
     logo_url: string | null;
     primary_color: string | null;
+    home_kit_image_url: string | null;
+    away_kit_image_url: string | null;
   } | null;
 }
 
@@ -324,8 +326,8 @@ export default function TeamProfileScreen() {
             <View style={styles.heroContent}>
               {/* Kit panels */}
               <View style={styles.kitPanel}>
-                {team.home_kit_image_url ? (
-                  <Image source={resolveImageSource(team.home_kit_image_url)} style={styles.kitImage} resizeMode="contain" />
+                {(team.home_kit_image_url || team.club?.home_kit_image_url) ? (
+                  <Image source={{ uri: team.home_kit_image_url ?? team.club?.home_kit_image_url ?? '' }} style={styles.kitImage} resizeMode="contain" />
                 ) : (
                   <View style={[styles.kitPlaceholder, { backgroundColor: primaryColor }]}>
                     <Text style={styles.kitPlaceholderText}>Home</Text>
@@ -345,8 +347,8 @@ export default function TeamProfileScreen() {
               </View>
 
               <View style={styles.kitPanel}>
-                {team.away_kit_image_url ? (
-                  <Image source={resolveImageSource(team.away_kit_image_url)} style={styles.kitImage} resizeMode="contain" />
+                {(team.away_kit_image_url || team.club?.away_kit_image_url) ? (
+                  <Image source={{ uri: team.away_kit_image_url ?? team.club?.away_kit_image_url ?? '' }} style={styles.kitImage} resizeMode="contain" />
                 ) : (
                   <View style={[styles.kitPlaceholder, { backgroundColor: `${primaryColor}66` }]}>
                     <Text style={styles.kitPlaceholderText}>Away</Text>
