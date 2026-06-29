@@ -542,7 +542,7 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: DARK_BG },
   loadingContainer: { flex: 1, backgroundColor: DARK_BG, alignItems: 'center', justifyContent: 'center' },
   errorText: { color: TEXT_SECONDARY, fontSize: 16 },
-  hero: { minHeight: 300 },
+  hero: {},
   heroOverlay: { backgroundColor: 'rgba(0,0,0,0.4)', flex: 1 },
   heroTop: { flexDirection: 'row', justifyContent: 'space-between', paddingHorizontal: 16, paddingTop: 8 },
   circleBtn: { width: 36, height: 36, borderRadius: 18, backgroundColor: 'rgba(0,0,0,0.4)', alignItems: 'center', justifyContent: 'center' },

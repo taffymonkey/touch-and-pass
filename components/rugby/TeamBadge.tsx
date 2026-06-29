@@ -28,11 +28,13 @@ export default function TeamBadge({ logoUrl, name, primaryColor, size = 40 }: Te
 
   if (logoUrl) {
     return (
-      <Image
-        source={resolveImageSource(logoUrl)}
-        style={[styles.image, { width: size, height: size, borderRadius: size / 2 }]}
-        resizeMode="contain"
-      />
+      <View style={[styles.logoBg, { width: size, height: size, borderRadius: size / 2 }]}>
+        <Image
+          source={resolveImageSource(logoUrl)}
+          style={{ width: size * 0.85, height: size * 0.85 }}
+          resizeMode="contain"
+        />
+      </View>
     );
   }
 
@@ -49,8 +51,11 @@ export default function TeamBadge({ logoUrl, name, primaryColor, size = 40 }: Te
 }
 
 const styles = StyleSheet.create({
-  image: {
-    backgroundColor: 'transparent',
+  logoBg: {
+    backgroundColor: '#ffffff',
+    alignItems: 'center',
+    justifyContent: 'center',
+    overflow: 'hidden',
   },
   circle: {
     alignItems: 'center',
