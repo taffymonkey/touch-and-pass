@@ -23,7 +23,7 @@
         "foregroundImage": "./assets/images/fifty22-light-1024x1024.png",
         "backgroundColor": "#FFFFFF"
       },
-      "package": "com.placeholder.app"
+      "package": "com.sportivelogic.pitchside"
     },
     "web": {
       "favicon": "./assets/images/newly.png",
