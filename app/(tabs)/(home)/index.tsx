@@ -26,7 +26,7 @@ import {
 function getDayStrip() {
   const days: Date[] = [];
   const today = new Date();
-  for (let i = -3; i <= 3; i++) {
+  for (let i = -7; i <= 7; i++) {
     const d = new Date(today);
     d.setDate(today.getDate() + i);
     days.push(d);

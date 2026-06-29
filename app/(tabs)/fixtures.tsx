@@ -23,6 +23,7 @@ interface FavouriteTeam {
   name: string;
   primary_color: string | null;
   logo_url: string | null;
+  club?: { logo_url: string | null; name: string | null } | null;
 }
 
 interface FavouriteEntry {
@@ -49,7 +50,7 @@ export default function FavouritesScreen() {
 
     const { data: favData, error: favError } = await supabase
       .from('fan_favourites')
-      .select('id, team_id, team:teams(id, name, primary_color, logo_url)')
+      .select('id, team_id, team:teams(id, name, primary_color, logo_url, club:clubs(logo_url, name))')
       .eq('user_id', user.id);
 
     if (favError) {
@@ -117,6 +118,11 @@ export default function FavouritesScreen() {
     router.push(`/match/${id}`);
   };
 
+  const handleTeamPress = (teamId: string) => {
+    console.log('[Favourites] Team header pressed:', teamId);
+    router.push(`/team/${teamId}`);
+  };
+
   const handleSignInPress = () => {
     console.log('[Favourites] Sign In button pressed');
     router.push('/(auth)/sign-in');
@@ -177,22 +183,32 @@ export default function FavouritesScreen() {
         {data.length === 0 ? (
           <View style={styles.centredInline}>
             <Text style={styles.emptyText}>
-              No favourite teams yet — add some from the Teams tab
+              No favourite teams yet
             </Text>
+            <Text style={styles.emptySubText}>
+              Star a team from the Teams tab to follow their fixtures here
+            </Text>
+            <TouchableOpacity
+              style={styles.browseButton}
+              onPress={() => router.push('/(tabs)/teams')}
+            >
+              <Text style={styles.browseButtonText}>Browse Teams</Text>
+            </TouchableOpacity>
           </View>
         ) : (
           data.map(({ team, fixtures }) => (
             <View key={team.id} style={styles.teamSection}>
               {/* Team header */}
-              <View style={styles.teamHeader}>
+              <TouchableOpacity style={styles.teamHeader} onPress={() => handleTeamPress(team.id)}>
                 <TeamBadge
-                  logoUrl={team.logo_url}
+                  logoUrl={team.logo_url ?? team.club?.logo_url}
                   name={team.name}
                   primaryColor={team.primary_color}
-                  size={32}
+                  size={36}
                 />
                 <Text style={styles.teamName}>{team.name}</Text>
-              </View>
+                <Text style={styles.teamChevron}>›</Text>
+              </TouchableOpacity>
 
               {/* Fixtures */}
               {fixtures.length === 0 ? (
@@ -304,4 +320,8 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     lineHeight: 22,
   },
+  emptySubText: { color: TEXT_SECONDARY, fontSize: 13, textAlign: 'center', lineHeight: 20, marginTop: 4 },
+  browseButton: { marginTop: 16, backgroundColor: BRAND_GREEN, paddingHorizontal: 28, paddingVertical: 12, borderRadius: 24 },
+  browseButtonText: { color: '#fff', fontSize: 15, fontWeight: '700' },
+  teamChevron: { color: TEXT_SECONDARY, fontSize: 18, marginLeft: 'auto' },
 });

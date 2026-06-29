@@ -8,6 +8,7 @@ import {
   Animated,
   ActivityIndicator,
   Alert,
+  Image,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocalSearchParams, useRouter } from 'expo-router';
@@ -55,7 +56,7 @@ interface Selection {
   jersey_number: number | null;
   is_substitute: boolean;
   is_captain: boolean;
-  player?: { id: string; first_name: string; last_name: string; position: string | null } | null;
+  player?: { id: string; first_name: string; last_name: string; position: string | null; photo_url: string | null } | null;
 }
 
 function computeScore(events: MatchEvent[], teamId: string): number {
@@ -96,6 +97,25 @@ export default function MatchDetailScreen() {
   const livePulse = useRef(new Animated.Value(1)).current;
   const statsAnim = useRef(new Animated.Value(0)).current;
 
+  const PlayerAvatar = ({ name, photoUrl, bench = false }: { name: string; photoUrl?: string | null; bench?: boolean }) => {
+    const size = 28;
+    if (photoUrl) {
+      return (
+        <Image
+          source={{ uri: photoUrl }}
+          style={[styles.playerAvatar, bench && styles.playerAvatarBench, { width: size, height: size, borderRadius: size / 2 }]}
+          resizeMode="cover"
+        />
+      );
+    }
+    const initials = name.split(' ').map(w => w[0]).join('').substring(0, 2);
+    return (
+      <View style={[styles.playerInitials, bench && styles.playerInitialsBench]}>
+        <Text style={styles.playerInitialsText}>{initials}</Text>
+      </View>
+    );
+  };
+
   useEffect(() => {
     const anim = Animated.loop(
       Animated.sequence([
@@ -118,7 +138,7 @@ export default function MatchDetailScreen() {
         .single(),
       supabase
         .from('fixture_selections')
-        .select(`*, player:players(id, first_name, last_name, position)`)
+        .select(`*, player:players(id, first_name, last_name, position, photo_url)`)
         .eq('fixture_id', id)
         .order('jersey_number', { ascending: true }),
       supabase
@@ -279,7 +299,7 @@ export default function MatchDetailScreen() {
 
             <View style={styles.heroScoreRow}>
               <View style={styles.heroTeam}>
-                <TeamBadge logoUrl={fixture.home_team?.logo_url} name={fixture.home_team?.name ?? '?'} primaryColor={fixture.home_team?.primary_color} size={44} />
+                <TeamBadge logoUrl={fixture.home_team?.logo_url ?? fixture.home_team?.club?.logo_url} name={fixture.home_team?.name ?? '?'} primaryColor={fixture.home_team?.primary_color} size={44} />
                 <Text style={styles.heroTeamName} numberOfLines={2}>{fixture.home_team?.name ?? 'TBC'}</Text>
               </View>
 
@@ -300,7 +320,7 @@ export default function MatchDetailScreen() {
               </View>
 
               <View style={[styles.heroTeam, styles.heroTeamRight]}>
-                <TeamBadge logoUrl={fixture.away_team?.logo_url} name={fixture.away_team?.name ?? '?'} primaryColor={fixture.away_team?.primary_color} size={44} />
+                <TeamBadge logoUrl={fixture.away_team?.logo_url ?? fixture.away_team?.club?.logo_url} name={fixture.away_team?.name ?? '?'} primaryColor={fixture.away_team?.primary_color} size={44} />
                 <Text style={[styles.heroTeamName, styles.heroTeamNameRight]} numberOfLines={2}>{fixture.away_team?.name ?? 'TBC'}</Text>
               </View>
             </View>
@@ -385,9 +405,7 @@ export default function MatchDetailScreen() {
                   return (
                     <View key={sel.id} style={styles.lineupRow}>
                       <View style={styles.lineupPlayerLeft}>
-                        <View style={styles.playerInitials}>
-                          <Text style={styles.playerInitialsText}>{playerName.split(' ').map(w => w[0]).join('').substring(0, 2)}</Text>
-                        </View>
+                        <PlayerAvatar name={playerName} photoUrl={sel.player?.photo_url} />
                         <Text style={styles.lineupPlayerName} numberOfLines={1}>
                           {playerName}{sel.is_captain ? ' (C)' : ''}
                         </Text>
@@ -401,9 +419,7 @@ export default function MatchDetailScreen() {
                             <Text style={[styles.lineupPlayerName, styles.lineupPlayerNameRight]} numberOfLines={1}>
                               {awayName}{away.is_captain ? ' (C)' : ''}
                             </Text>
-                            <View style={styles.playerInitials}>
-                              <Text style={styles.playerInitialsText}>{awayName.split(' ').map(w => w[0]).join('').substring(0, 2)}</Text>
-                            </View>
+                            <PlayerAvatar name={awayName} photoUrl={away.player?.photo_url} />
                           </>
                         )}
                       </View>
@@ -422,9 +438,7 @@ export default function MatchDetailScreen() {
                   return (
                     <View key={sel.id} style={[styles.lineupRow, styles.lineupRowBench]}>
                       <View style={styles.lineupPlayerLeft}>
-                        <View style={[styles.playerInitials, styles.playerInitialsBench]}>
-                          <Text style={styles.playerInitialsText}>{playerName.split(' ').map(w => w[0]).join('').substring(0, 2)}</Text>
-                        </View>
+                        <PlayerAvatar name={playerName} photoUrl={sel.player?.photo_url} bench />
                         <Text style={styles.lineupPlayerName} numberOfLines={1}>{playerName}</Text>
                       </View>
                       <View style={styles.lineupPosBadge}>
@@ -434,9 +448,7 @@ export default function MatchDetailScreen() {
                         {away && (
                           <>
                             <Text style={[styles.lineupPlayerName, styles.lineupPlayerNameRight]} numberOfLines={1}>{awayName}</Text>
-                            <View style={[styles.playerInitials, styles.playerInitialsBench]}>
-                              <Text style={styles.playerInitialsText}>{awayName.split(' ').map(w => w[0]).join('').substring(0, 2)}</Text>
-                            </View>
+                            <PlayerAvatar name={awayName} photoUrl={away.player?.photo_url} bench />
                           </>
                         )}
                       </View>
@@ -621,6 +633,8 @@ const styles = StyleSheet.create({
   playerInitials: { width: 28, height: 28, borderRadius: 14, backgroundColor: BRAND_GREEN, alignItems: 'center', justifyContent: 'center' },
   playerInitialsBench: { backgroundColor: '#2d4a33' },
   playerInitialsText: { color: '#fff', fontSize: 10, fontWeight: '700' },
+  playerAvatar: { backgroundColor: CARD_BG },
+  playerAvatarBench: { opacity: 0.7 },
   benchDivider: { alignItems: 'center', paddingVertical: 10, borderTopWidth: 1, borderBottomWidth: 1, borderColor: BORDER_COLOR, marginVertical: 4 },
   benchLabel: { color: TEXT_SECONDARY, fontSize: 11, fontWeight: '700', letterSpacing: 1 },
   empty: { alignItems: 'center', paddingVertical: 60 },

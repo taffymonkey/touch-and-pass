@@ -10,6 +10,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
+import Constants from 'expo-constants';
 import { useAuth } from '@/contexts/AuthContext';
 import {
   DARK_BG, CARD_BG, BORDER_COLOR, TEXT_PRIMARY, TEXT_SECONDARY, BRAND_GREEN, LIVE_RED,
@@ -133,6 +134,12 @@ export default function AccountScreen() {
             </View>
           </View>
         </View>
+
+        <View style={styles.versionRow}>
+          <Text style={styles.versionText}>
+            Fifty22 v{Constants.expoConfig?.version ?? '1.0.0'}
+          </Text>
+        </View>
       </ScrollView>
     </SafeAreaView>
   );
@@ -247,4 +254,6 @@ const styles = StyleSheet.create({
   infoRowLast: { borderBottomWidth: 0 },
   infoLabel: { color: TEXT_SECONDARY, fontSize: 14 },
   infoValue: { color: TEXT_PRIMARY, fontSize: 14, fontWeight: '600' },
+  versionRow: { alignItems: 'center', paddingVertical: 24 },
+  versionText: { color: TEXT_SECONDARY, fontSize: 12 },
 });

@@ -153,7 +153,8 @@ export default function TeamsScreen() {
   const searchResults = searchText
     ? allTeams.filter(t =>
         t.name.toLowerCase().includes(searchText.toLowerCase()) ||
-        t.clubName.toLowerCase().includes(searchText.toLowerCase())
+        t.clubName.toLowerCase().includes(searchText.toLowerCase()) ||
+        (t.age_group ?? '').toLowerCase().includes(searchText.toLowerCase())
       )
     : null;
 

@@ -11,6 +11,7 @@ import {
   Image,
   ImageSourcePropType,
   useWindowDimensions,
+  Modal,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocalSearchParams, useRouter } from 'expo-router';
@@ -145,6 +146,8 @@ export default function PlayerProfileScreen() {
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState(0);
   const [isFavourite, setIsFavourite] = useState(false);
+  const [scope, setScope] = useState<string>('career');
+  const [scopeModalVisible, setScopeModalVisible] = useState(false);
   const tabAnim = useRef(new Animated.Value(0)).current;
 
   const fetchData = useCallback(async () => {
@@ -237,20 +240,20 @@ export default function PlayerProfileScreen() {
     );
   }
 
-  // Stats computation
-  const uniqueFixtureIds = new Set(events.map(e => e.fixture?.id).filter(Boolean));
+  // Stats computation (scoped)
+  const uniqueFixtureIds = new Set(filteredEvents.map(e => e.fixture?.id).filter(Boolean));
   const appearances = uniqueFixtureIds.size;
-  const tries = events.filter(e => e.event_type === 'try').length;
-  const conversions = events.filter(e => e.event_type === 'conversion').length;
-  const penalties = events.filter(e => e.event_type === 'penalty').length;
-  const dropGoals = events.filter(e => e.event_type === 'drop_goal').length;
-  const yellowCards = events.filter(e => e.event_type === 'yellow_card').length;
-  const redCards = events.filter(e => e.event_type === 'red_card').length;
+  const tries = filteredEvents.filter(e => e.event_type === 'try').length;
+  const conversions = filteredEvents.filter(e => e.event_type === 'conversion').length;
+  const penalties = filteredEvents.filter(e => e.event_type === 'penalty').length;
+  const dropGoals = filteredEvents.filter(e => e.event_type === 'drop_goal').length;
+  const yellowCards = filteredEvents.filter(e => e.event_type === 'yellow_card').length;
+  const redCards = filteredEvents.filter(e => e.event_type === 'red_card').length;
   const points = tries * 5 + conversions * 2 + penalties * 3 + dropGoals * 3;
 
-  // Recent 5 fixtures
+  // Recent 5 fixtures (scoped)
   const fixtureMap = new Map<string, { fixture: PlayerEvent['fixture']; events: PlayerEvent[] }>();
-  events.forEach(e => {
+  filteredEvents.forEach(e => {
     if (!e.fixture?.id) return;
     if (!fixtureMap.has(e.fixture.id)) {
       fixtureMap.set(e.fixture.id, { fixture: e.fixture, events: [] });
@@ -264,6 +267,38 @@ export default function PlayerProfileScreen() {
   const primaryReg = registrations.find(r => r.is_primary) ?? registrations[0];
   const primaryTeam = primaryReg?.team;
   const primaryColor = primaryTeam?.primary_color ?? BRAND_GREEN;
+
+  // Scope options
+  const scopeOptions: { key: string; label: string }[] = [
+    { key: 'career', label: 'Career' },
+    { key: 'this_season', label: 'This Season' },
+    { key: 'last_season', label: 'Last Season' },
+    ...registrations.map(r => ({
+      key: `team_${r.team_id}`,
+      label: r.team?.name ?? 'Unknown Team',
+    })),
+  ];
+
+  const currentScopeLabel = scopeOptions.find(o => o.key === scope)?.label ?? 'Career';
+
+  // Season boundaries
+  const now = new Date();
+  const thisSeasonStart = new Date(now.getMonth() >= 7 ? now.getFullYear() : now.getFullYear() - 1, 7, 1);
+  const lastSeasonStart = new Date(thisSeasonStart.getFullYear() - 1, 7, 1);
+  const lastSeasonEnd = new Date(thisSeasonStart.getFullYear(), 7, 1);
+
+  // Filter events by scope
+  const filteredEvents = events.filter(e => {
+    const matchDate = e.fixture?.match_date ? new Date(e.fixture.match_date) : null;
+    if (!matchDate) return false;
+    if (scope === 'this_season') return matchDate >= thisSeasonStart;
+    if (scope === 'last_season') return matchDate >= lastSeasonStart && matchDate < lastSeasonEnd;
+    if (scope.startsWith('team_')) {
+      const teamId = scope.replace('team_', '');
+      return e.owning_team_id === teamId;
+    }
+    return true; // career — all events
+  });
 
   const fullName = `${player.first_name} ${player.last_name}`.toUpperCase();
   const jerseyNum = player.jersey_number?.toString() ?? '';
@@ -364,15 +399,55 @@ export default function PlayerProfileScreen() {
         />
       </View>
 
+      <Modal
+        visible={scopeModalVisible}
+        transparent
+        animationType="slide"
+        onRequestClose={() => setScopeModalVisible(false)}
+      >
+        <TouchableOpacity
+          style={styles.modalOverlay}
+          activeOpacity={1}
+          onPress={() => setScopeModalVisible(false)}
+        >
+          <View style={styles.modalSheet}>
+            <View style={styles.modalHandle} />
+            <Text style={styles.modalTitle}>View Stats For</Text>
+            {scopeOptions.map(option => {
+              const isActive = scope === option.key;
+              return (
+                <TouchableOpacity
+                  key={option.key}
+                  style={[styles.modalOption, isActive && styles.modalOptionActive]}
+                  onPress={() => {
+                    console.log('[Player] Scope selected:', option.key);
+                    setScope(option.key);
+                    setScopeModalVisible(false);
+                  }}
+                >
+                  <Text style={[styles.modalOptionText, isActive && styles.modalOptionTextActive]}>
+                    {option.label}
+                  </Text>
+                  {isActive && <Text style={styles.modalOptionCheck}>✓</Text>}
+                </TouchableOpacity>
+              );
+            })}
+          </View>
+        </TouchableOpacity>
+      </Modal>
+
       <ScrollView style={styles.tabContent} contentContainerStyle={styles.tabContentInner}>
         {/* Overview tab */}
         {activeTab === 0 ? (
           <View>
             {/* Scope header */}
-            <View style={styles.scopeHeader}>
-              <Text style={styles.scopeTitle}>This Season</Text>
+            <TouchableOpacity style={styles.scopeHeader} onPress={() => {
+              console.log('[Player] Scope dropdown opened');
+              setScopeModalVisible(true);
+            }}>
+              <Text style={styles.scopeTitle}>{currentScopeLabel}</Text>
               <Text style={styles.scopeChevron}>⌄</Text>
-            </View>
+            </TouchableOpacity>
 
             {/* Two-column layout */}
             <View style={styles.twoCol}>
@@ -700,4 +775,15 @@ const styles = StyleSheet.create({
   historyEvents: { flexDirection: 'row', gap: 4 },
   empty: { alignItems: 'center', paddingVertical: 40 },
   emptyText: { color: TEXT_SECONDARY, fontSize: 15 },
+
+  // Scope modal
+  modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.6)', justifyContent: 'flex-end' },
+  modalSheet: { backgroundColor: CARD_BG, borderTopLeftRadius: 20, borderTopRightRadius: 20, paddingBottom: 40, paddingTop: 12 },
+  modalHandle: { width: 40, height: 4, borderRadius: 2, backgroundColor: BORDER_COLOR, alignSelf: 'center', marginBottom: 16 },
+  modalTitle: { color: TEXT_SECONDARY, fontSize: 12, fontWeight: '700', letterSpacing: 1, textTransform: 'uppercase', paddingHorizontal: 20, marginBottom: 8 },
+  modalOption: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 20, paddingVertical: 16, borderBottomWidth: 1, borderBottomColor: BORDER_COLOR },
+  modalOptionActive: { backgroundColor: 'rgba(26,71,42,0.3)' },
+  modalOptionText: { color: TEXT_PRIMARY, fontSize: 16 },
+  modalOptionTextActive: { color: BRAND_GREEN, fontWeight: '700' },
+  modalOptionCheck: { color: BRAND_GREEN, fontSize: 16, fontWeight: '700' },
 });
