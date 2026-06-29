@@ -10,6 +10,7 @@ import {
   Alert,
   Image,
   ImageSourcePropType,
+  useWindowDimensions,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocalSearchParams, useRouter } from 'expo-router';
@@ -73,11 +74,11 @@ interface Registration {
   } | null;
 }
 
-const TABS = ['Overview', 'History'];
+const TABS = ['OVERVIEW', 'HISTORY'];
 
 function formatShortDate(dateStr: string): string {
   const d = new Date(dateStr);
-  return d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: '2-digit' });
+  return d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' }).toUpperCase();
 }
 
 function computeScoreForTeam(events: PlayerEvent[], teamId: string): number {
@@ -96,6 +97,7 @@ export default function PlayerProfileScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
   const { user } = useAuth();
+  const { width } = useWindowDimensions();
   const [player, setPlayer] = useState<PublicPlayer | null>(null);
   const [events, setEvents] = useState<PlayerEvent[]>([]);
   const [registrations, setRegistrations] = useState<Registration[]>([]);
@@ -224,18 +226,35 @@ export default function PlayerProfileScreen() {
 
   const fullName = `${player.first_name} ${player.last_name}`.toUpperCase();
   const jerseyNum = player.jersey_number?.toString() ?? '';
+  const jerseyDisplay = jerseyNum !== '' ? `#${jerseyNum}` : '';
 
-  const tabIndicatorWidth = 160;
+  const tabIndicatorWidth = width / 2;
   const tabIndicatorTranslate = tabAnim.interpolate({
     inputRange: [0, 1],
     outputRange: [0, tabIndicatorWidth],
   });
 
+  const nationalityCode = player.nationality ? player.nationality.toLowerCase().slice(0, 2) : null;
+  const flagUri = nationalityCode ? `https://flagcdn.com/w40/${nationalityCode}.png` : null;
+
+  const clubDisplayName = primaryTeam?.club?.name ?? primaryTeam?.name ?? '';
+
+  const statRows = [
+    { label: 'Appearances', value: appearances },
+    { label: 'Points', value: points },
+    { label: 'Tries', value: tries },
+    { label: 'Conversions', value: conversions },
+    { label: 'Penalties', value: penalties },
+    { label: 'Drop Goals', value: dropGoals },
+    { label: 'Yellow Cards', value: yellowCards },
+    { label: 'Red Cards', value: redCards },
+  ];
+
   return (
     <View style={styles.container}>
       {/* Hero Header */}
       <View style={styles.hero}>
-        {/* Left: photo or colour */}
+        {/* Left: photo */}
         <View style={[styles.heroLeft, { backgroundColor: primaryColor }]}>
           {player.photo_url ? (
             <Image source={resolveImageSource(player.photo_url)} style={styles.heroPhoto} resizeMode="cover" />
@@ -244,7 +263,7 @@ export default function PlayerProfileScreen() {
             colors={['transparent', 'rgba(0,0,0,0.7)']}
             style={styles.heroPhotoGradient}
           />
-          {jerseyNum !== '' && <Text style={styles.heroJerseyNum}>{jerseyNum}</Text>}
+          {jerseyDisplay !== '' && <Text style={styles.heroJerseyNum}>{jerseyDisplay}</Text>}
         </View>
 
         {/* Right: info */}
@@ -256,21 +275,21 @@ export default function PlayerProfileScreen() {
             size={44}
           />
           <Text style={styles.heroName}>{fullName}</Text>
-          {player.position && (
+          {player.position ? (
             <View style={styles.positionChip}>
               <Text style={styles.positionChipText}>{player.position}</Text>
             </View>
-          )}
-          {player.secondary_position && (
+          ) : null}
+          {player.secondary_position ? (
             <Text style={styles.secondaryPos}>{player.secondary_position}</Text>
-          )}
-          {player.nationality && (
-            <Text style={styles.nationality}>{player.nationality}</Text>
-          )}
+          ) : null}
+          {flagUri ? (
+            <Image source={{ uri: flagUri }} style={styles.flagImage} resizeMode="contain" />
+          ) : null}
           <View style={styles.heroSeparator} />
-          {primaryTeam && (
-            <Text style={styles.clubNameText}>{primaryTeam.club?.name ?? primaryTeam.name}</Text>
-          )}
+          {clubDisplayName !== '' ? (
+            <Text style={styles.clubNameText}>{clubDisplayName}</Text>
+          ) : null}
         </View>
 
         {/* Overlay buttons */}
@@ -279,7 +298,7 @@ export default function PlayerProfileScreen() {
             <Text style={styles.circleBtnText}>‹</Text>
           </TouchableOpacity>
           <TouchableOpacity style={styles.circleBtn} onPress={handleFavourite}>
-            <Text style={[styles.circleBtnText, isFavourite && styles.starActive]}>
+            <Text style={[styles.circleBtnText, isFavourite ? styles.starActive : null]}>
               {isFavourite ? '★' : '☆'}
             </Text>
           </TouchableOpacity>
@@ -290,7 +309,7 @@ export default function PlayerProfileScreen() {
       <View style={styles.tabBar}>
         {TABS.map((tab, i) => (
           <TouchableOpacity key={tab} style={styles.tabItem} onPress={() => handleTabPress(i)}>
-            <Text style={[styles.tabLabel, activeTab === i && styles.tabLabelActive]}>{tab}</Text>
+            <Text style={[styles.tabLabel, activeTab === i ? styles.tabLabelActive : null]}>{tab}</Text>
           </TouchableOpacity>
         ))}
         <Animated.View
@@ -303,30 +322,31 @@ export default function PlayerProfileScreen() {
 
       <ScrollView style={styles.tabContent} contentContainerStyle={styles.tabContentInner}>
         {/* Overview tab */}
-        {activeTab === 0 && (
-          <View style={styles.overviewTab}>
-            <View style={styles.statsRow}>
-              <View style={styles.statsLeft}>
-                <Text style={styles.statsSectionTitle}>Stats</Text>
-                {[
-                  { label: 'Appearances', value: appearances },
-                  { label: 'Points', value: points },
-                  { label: 'Tries', value: tries },
-                  { label: 'Conversions', value: conversions },
-                  { label: 'Penalties', value: penalties },
-                  { label: 'Drop Goals', value: dropGoals },
-                  { label: 'Yellow Cards', value: yellowCards },
-                  { label: 'Red Cards', value: redCards },
-                ].map(s => (
-                  <View key={s.label} style={styles.statItem}>
+        {activeTab === 0 ? (
+          <View>
+            {/* Scope header */}
+            <View style={styles.scopeHeader}>
+              <Text style={styles.scopeTitle}>This Season</Text>
+              <Text style={styles.scopeChevron}>⌄</Text>
+            </View>
+
+            {/* Two-column layout */}
+            <View style={styles.twoCol}>
+              {/* Stats column */}
+              <View style={styles.statsCol}>
+                <View style={styles.statsBar} />
+                <Text style={styles.statsSectionLabel}>STATS</Text>
+                {statRows.map(s => (
+                  <View key={s.label} style={styles.statRow}>
                     <Text style={styles.statLabel}>{s.label}</Text>
                     <Text style={styles.statValue}>{s.value}</Text>
                   </View>
                 ))}
               </View>
 
-              <View style={styles.statsRight}>
-                <Text style={styles.statsSectionTitle}>Recent</Text>
+              {/* Recent column */}
+              <View style={styles.recentCol}>
+                <Text style={styles.statsSectionLabel}>RECENT</Text>
                 {recentFixtures.length === 0 ? (
                   <Text style={styles.noDataText}>No appearances</Text>
                 ) : (
@@ -336,21 +356,40 @@ export default function PlayerProfileScreen() {
                     const awayId = fixture.away_team?.id ?? '';
                     const homeScore = computeScoreForTeam(fEvents.map(e => ({ ...e, fixture })), homeId);
                     const awayScore = computeScoreForTeam(fEvents.map(e => ({ ...e, fixture })), awayId);
+                    const dateDisplay = formatShortDate(fixture.match_date);
+                    const scoreDisplay = `${homeScore}–${awayScore}`;
+                    const matchupDisplay = `${fixture.home_team?.name ?? '?'} v ${fixture.away_team?.name ?? '?'}`;
+
+                    const fTries = fEvents.filter(e => e.event_type === 'try').length;
+                    const fConversions = fEvents.filter(e => e.event_type === 'conversion').length;
+                    const fPenalties = fEvents.filter(e => e.event_type === 'penalty').length;
+                    const fDropGoals = fEvents.filter(e => e.event_type === 'drop_goal').length;
+                    const fRedCards = fEvents.filter(e => e.event_type === 'red_card').length;
+                    const fYellowCards = fEvents.filter(e => e.event_type === 'yellow_card').length;
+
+                    const badges = [
+                      { label: `T${fTries}`, active: fTries > 0 },
+                      { label: `C${fConversions}`, active: fConversions > 0 },
+                      { label: `P${fPenalties}`, active: fPenalties > 0 },
+                      { label: `D${fDropGoals}`, active: fDropGoals > 0 },
+                      { label: `RC${fRedCards}`, active: fRedCards > 0 },
+                      { label: `YC${fYellowCards}`, active: fYellowCards > 0 },
+                    ];
+
                     return (
                       <TouchableOpacity
                         key={fixture.id}
                         style={styles.recentCard}
                         onPress={() => handleFixturePress(fixture.id)}
                       >
-                        <Text style={styles.recentDate}>{formatShortDate(fixture.match_date)}</Text>
-                        <View style={styles.recentTeams}>
-                          <TeamBadge logoUrl={fixture.home_team?.logo_url ?? fixture.home_team?.club?.logo_url} name={fixture.home_team?.name ?? '?'} primaryColor={fixture.home_team?.primary_color} size={20} />
-                          <Text style={styles.recentScore}>{homeScore}–{awayScore}</Text>
-                          <TeamBadge logoUrl={fixture.away_team?.logo_url ?? fixture.away_team?.club?.logo_url} name={fixture.away_team?.name ?? '?'} primaryColor={fixture.away_team?.primary_color} size={20} />
+                        <View style={styles.recentTopRow}>
+                          <Text style={styles.recentDate}>{dateDisplay}</Text>
+                          <Text style={styles.recentScore}>{scoreDisplay}</Text>
                         </View>
-                        <View style={styles.recentEvents}>
-                          {fEvents.slice(0, 3).map(e => (
-                            <EventIcon key={e.id} type={e.event_type} size={16} />
+                        <Text style={styles.recentMatchup} numberOfLines={1}>{matchupDisplay}</Text>
+                        <View style={styles.recentBadges}>
+                          {badges.map(b => (
+                            <Text key={b.label} style={[styles.badgeText, b.active ? styles.badgeActive : styles.badgeZero]}>{b.label}</Text>
                           ))}
                         </View>
                       </TouchableOpacity>
@@ -360,60 +399,60 @@ export default function PlayerProfileScreen() {
               </View>
             </View>
 
-            {/* Squads */}
-            {registrations.length > 0 && (
+            {/* Squads section */}
+            {registrations.length > 0 ? (
               <View style={styles.squadsSection}>
-                <Text style={styles.statsSectionTitle}>Squads</Text>
+                <Text style={styles.squadsSectionLabel}>SQUADS</Text>
                 {registrations.map(reg => (
                   <View key={reg.team_id} style={styles.squadRow}>
                     <TeamBadge
-                      logoUrl={reg.team?.logo_url}
+                      logoUrl={reg.team?.club?.logo_url ?? reg.team?.logo_url}
                       name={reg.team?.name ?? '?'}
                       primaryColor={reg.team?.primary_color}
-                      size={36}
+                      size={44}
                     />
                     <View style={styles.squadInfo}>
                       <Text style={styles.squadTeamName}>{reg.team?.name}</Text>
-                      {reg.team?.age_group && (
+                      {reg.team?.age_group ? (
                         <Text style={styles.squadAgeGroup}>{reg.team.age_group}</Text>
-                      )}
+                      ) : null}
                     </View>
-                    {reg.is_primary && (
+                    {reg.is_primary ? (
                       <View style={styles.primaryBadge}>
                         <Text style={styles.primaryBadgeText}>Primary</Text>
                       </View>
-                    )}
+                    ) : null}
                   </View>
                 ))}
               </View>
-            )}
+            ) : null}
           </View>
-        )}
+        ) : null}
 
         {/* History tab */}
-        {activeTab === 1 && (
+        {activeTab === 1 ? (
           <View style={styles.historyTab}>
-            {registrations.length > 0 && (
+            {registrations.length > 0 ? (
               <View style={styles.historySection}>
                 <Text style={styles.historySectionTitle}>Teams Played For</Text>
                 {registrations.map(reg => (
                   <View key={reg.team_id} style={styles.historyTeamRow}>
                     <TeamBadge
-                      logoUrl={reg.team?.logo_url}
+                      logoUrl={reg.team?.club?.logo_url ?? reg.team?.logo_url}
                       name={reg.team?.name ?? '?'}
                       primaryColor={reg.team?.primary_color}
                       size={36}
                     />
                     <View style={styles.historyTeamInfo}>
                       <Text style={styles.historyTeamName}>{reg.team?.name}</Text>
-                      {reg.team?.age_group && (
+                      {reg.team?.age_group ? (
                         <Text style={styles.historyTeamMeta}>{reg.team.age_group}</Text>
-                      )}
+                      ) : null}
                     </View>
                   </View>
                 ))}
               </View>
-            )}
+            ) : null}
 
             <View style={styles.historySection}>
               <Text style={styles.historySectionTitle}>All Games</Text>
@@ -430,16 +469,18 @@ export default function PlayerProfileScreen() {
                     const awayId = fixture.away_team?.id ?? '';
                     const homeScore = computeScoreForTeam(fEvents.map(e => ({ ...e, fixture })), homeId);
                     const awayScore = computeScoreForTeam(fEvents.map(e => ({ ...e, fixture })), awayId);
+                    const historyDateDisplay = formatShortDate(fixture.match_date);
+                    const historyScoreDisplay = `${homeScore} – ${awayScore}`;
                     return (
                       <TouchableOpacity
                         key={fixture.id}
                         style={styles.historyGameRow}
                         onPress={() => handleFixturePress(fixture.id)}
                       >
-                        <Text style={styles.historyDate}>{formatShortDate(fixture.match_date)}</Text>
+                        <Text style={styles.historyDate}>{historyDateDisplay}</Text>
                         <View style={styles.historyMatchup}>
                           <TeamBadge logoUrl={fixture.home_team?.logo_url ?? fixture.home_team?.club?.logo_url} name={fixture.home_team?.name ?? '?'} primaryColor={fixture.home_team?.primary_color} size={24} />
-                          <Text style={styles.historyScore}>{homeScore} – {awayScore}</Text>
+                          <Text style={styles.historyScore}>{historyScoreDisplay}</Text>
                           <TeamBadge logoUrl={fixture.away_team?.logo_url ?? fixture.away_team?.club?.logo_url} name={fixture.away_team?.name ?? '?'} primaryColor={fixture.away_team?.primary_color} size={24} />
                         </View>
                         <View style={styles.historyEvents}>
@@ -453,7 +494,7 @@ export default function PlayerProfileScreen() {
               )}
             </View>
           </View>
-        )}
+        ) : null}
       </ScrollView>
     </View>
   );
@@ -463,51 +504,74 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: DARK_BG },
   loadingContainer: { flex: 1, backgroundColor: DARK_BG, alignItems: 'center', justifyContent: 'center' },
   errorText: { color: TEXT_SECONDARY, fontSize: 16 },
-  hero: { height: 280, flexDirection: 'row', position: 'relative' },
-  heroLeft: { width: 170, position: 'relative', overflow: 'hidden' },
+
+  // Hero
+  hero: { height: 280, flexDirection: 'row' },
+  heroLeft: { width: '45%', position: 'relative', overflow: 'hidden' },
   heroPhoto: { ...StyleSheet.absoluteFillObject },
   heroPhotoGradient: { ...StyleSheet.absoluteFillObject },
-  heroJerseyNum: { position: 'absolute', bottom: 12, left: 12, color: '#fff', fontSize: 48, fontWeight: '900', opacity: 0.9 },
-  heroRight: { flex: 1, backgroundColor: CARD_BG, padding: 16, justifyContent: 'center', gap: 6 },
-  heroName: { color: TEXT_PRIMARY, fontSize: 16, fontWeight: '800', letterSpacing: 0.5, lineHeight: 20 },
-  positionChip: { alignSelf: 'flex-start', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 8, backgroundColor: BRAND_GREEN },
-  positionChipText: { color: '#fff', fontSize: 11, fontWeight: '700' },
-  secondaryPos: { color: TEXT_SECONDARY, fontSize: 12 },
-  nationality: { color: TEXT_SECONDARY, fontSize: 12 },
+  heroJerseyNum: { position: 'absolute', bottom: 12, left: 12, color: BRAND_GREEN, fontSize: 52, fontWeight: '900' },
+  heroRight: { flex: 1, backgroundColor: '#111', padding: 16, justifyContent: 'center', gap: 8 },
+  heroName: { color: '#fff', fontSize: 22, fontWeight: '900', letterSpacing: 0.5 },
+  positionChip: { alignSelf: 'flex-start', paddingHorizontal: 12, paddingVertical: 5, borderRadius: 8, backgroundColor: BRAND_GREEN },
+  positionChipText: { color: '#fff', fontSize: 12, fontWeight: '700' },
+  secondaryPos: { color: TEXT_SECONDARY, fontSize: 13 },
+  flagImage: { width: 32, height: 22 },
   heroSeparator: { height: 1, backgroundColor: BORDER_COLOR, marginVertical: 4 },
-  clubNameText: { color: TEXT_SECONDARY, fontSize: 12, fontWeight: '600' },
-  heroButtons: { position: 'absolute', top: 0, left: 0, right: 0, flexDirection: 'row', justifyContent: 'space-between', paddingHorizontal: 12, paddingTop: 8 },
-  circleBtn: { width: 36, height: 36, borderRadius: 18, backgroundColor: 'rgba(0,0,0,0.5)', alignItems: 'center', justifyContent: 'center' },
+  clubNameText: { color: '#fff', fontSize: 14, fontWeight: '600' },
+  heroButtons: { position: 'absolute', top: 0, left: 0, right: 0, flexDirection: 'row', justifyContent: 'space-between', paddingHorizontal: 12 },
+  circleBtn: { width: 36, height: 36, borderRadius: 18, backgroundColor: 'rgba(0,0,0,0.55)', alignItems: 'center', justifyContent: 'center' },
   circleBtnText: { color: '#fff', fontSize: 22, fontWeight: '700', lineHeight: 28 },
   starActive: { color: '#f59e0b' },
-  tabBar: { flexDirection: 'row', backgroundColor: CARD_BG, borderBottomWidth: 1, borderBottomColor: BORDER_COLOR, position: 'relative' },
+
+  // Tab bar
+  tabBar: { flexDirection: 'row', backgroundColor: DARK_BG, borderBottomWidth: 1, borderBottomColor: BORDER_COLOR, position: 'relative' },
   tabItem: { flex: 1, paddingVertical: 14, alignItems: 'center' },
-  tabLabel: { color: TEXT_SECONDARY, fontSize: 13, fontWeight: '600' },
-  tabLabelActive: { color: BRAND_GREEN },
+  tabLabel: { color: TEXT_SECONDARY, fontSize: 13, fontWeight: '600', letterSpacing: 0.5 },
+  tabLabelActive: { color: '#fff', fontWeight: '700' },
   tabIndicator: { position: 'absolute', bottom: 0, left: 0, height: 2, backgroundColor: BRAND_GREEN, borderRadius: 1 },
+
   tabContent: { flex: 1 },
   tabContentInner: { paddingBottom: 120 },
-  overviewTab: { padding: 16, gap: 16 },
-  statsRow: { flexDirection: 'row', gap: 12 },
-  statsLeft: { flex: 1, gap: 4 },
-  statsRight: { flex: 1, gap: 6 },
-  statsSectionTitle: { color: TEXT_SECONDARY, fontSize: 11, fontWeight: '700', letterSpacing: 1, textTransform: 'uppercase', marginBottom: 6 },
-  statItem: { flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 6, borderBottomWidth: 1, borderBottomColor: BORDER_COLOR },
-  statLabel: { color: TEXT_SECONDARY, fontSize: 12 },
+
+  // Scope header
+  scopeHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 16, paddingVertical: 14, borderBottomWidth: 1, borderBottomColor: BORDER_COLOR },
+  scopeTitle: { color: TEXT_PRIMARY, fontSize: 16, fontWeight: '700' },
+  scopeChevron: { color: TEXT_SECONDARY, fontSize: 18 },
+
+  // Two-column
+  twoCol: { flexDirection: 'row', padding: 16, gap: 12 },
+  statsCol: { flex: 1, position: 'relative', paddingLeft: 8 },
+  statsBar: { position: 'absolute', left: 0, top: 0, bottom: 0, width: 2, backgroundColor: BRAND_GREEN },
+  statsSectionLabel: { color: TEXT_SECONDARY, fontSize: 11, fontWeight: '700', letterSpacing: 1, textTransform: 'uppercase', marginBottom: 8 },
+  statRow: { flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 5, borderBottomWidth: 1, borderBottomColor: BORDER_COLOR },
+  statLabel: { color: TEXT_SECONDARY, fontSize: 13 },
   statValue: { color: TEXT_PRIMARY, fontSize: 13, fontWeight: '700' },
+
+  recentCol: { flex: 1 },
+  recentCard: { backgroundColor: CARD_BG, borderRadius: 8, padding: 10, marginBottom: 6 },
+  recentTopRow: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 3 },
+  recentDate: { color: BRAND_GREEN, fontSize: 10, fontWeight: '700' },
+  recentScore: { color: TEXT_PRIMARY, fontSize: 12, fontWeight: '700' },
+  recentMatchup: { color: TEXT_PRIMARY, fontSize: 12, fontWeight: '600', marginBottom: 4 },
+  recentBadges: { flexDirection: 'row', gap: 4, flexWrap: 'wrap' },
+  badgeText: { fontSize: 10, fontWeight: '700' },
+  badgeActive: { color: BRAND_GREEN },
+  badgeZero: { color: TEXT_SECONDARY },
+
   noDataText: { color: TEXT_SECONDARY, fontSize: 12 },
-  recentCard: { backgroundColor: CARD_BG, borderRadius: 10, borderWidth: 1, borderColor: BORDER_COLOR, padding: 8, gap: 4, marginBottom: 6 },
-  recentDate: { color: TEXT_SECONDARY, fontSize: 10 },
-  recentTeams: { flexDirection: 'row', alignItems: 'center', gap: 6 },
-  recentScore: { color: TEXT_PRIMARY, fontSize: 12, fontWeight: '700', flex: 1, textAlign: 'center' },
-  recentEvents: { flexDirection: 'row', gap: 4 },
-  squadsSection: { gap: 8 },
-  squadRow: { flexDirection: 'row', alignItems: 'center', paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: BORDER_COLOR, gap: 10 },
+
+  // Squads
+  squadsSection: { borderTopWidth: 1, borderTopColor: BORDER_COLOR, marginTop: 8 },
+  squadsSectionLabel: { color: TEXT_SECONDARY, fontSize: 11, fontWeight: '700', letterSpacing: 1, textTransform: 'uppercase', paddingHorizontal: 16, paddingTop: 16, paddingBottom: 4 },
+  squadRow: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: BORDER_COLOR, gap: 12 },
   squadInfo: { flex: 1 },
-  squadTeamName: { color: TEXT_PRIMARY, fontSize: 14, fontWeight: '600' },
-  squadAgeGroup: { color: TEXT_SECONDARY, fontSize: 12, marginTop: 2 },
-  primaryBadge: { paddingHorizontal: 8, paddingVertical: 3, borderRadius: 8, backgroundColor: 'rgba(26,71,42,0.5)', borderWidth: 1, borderColor: BRAND_GREEN },
-  primaryBadgeText: { color: BRAND_GREEN, fontSize: 10, fontWeight: '700' },
+  squadTeamName: { color: TEXT_PRIMARY, fontSize: 15, fontWeight: '700' },
+  squadAgeGroup: { color: TEXT_SECONDARY, fontSize: 13, marginTop: 2 },
+  primaryBadge: { paddingHorizontal: 12, paddingVertical: 6, borderRadius: 16, backgroundColor: BRAND_GREEN },
+  primaryBadgeText: { color: '#fff', fontSize: 12, fontWeight: '700' },
+
+  // History tab
   historyTab: { padding: 16, gap: 16 },
   historySection: { gap: 8 },
   historySectionTitle: { color: TEXT_SECONDARY, fontSize: 11, fontWeight: '700', letterSpacing: 1, textTransform: 'uppercase' },
