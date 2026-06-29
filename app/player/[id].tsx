@@ -29,6 +29,47 @@ function resolveImageSource(source: string | number | ImageSourcePropType | unde
   return source as ImageSourcePropType;
 }
 
+const NATIONALITY_TO_FLAG: Record<string, string> = {
+  'england': 'gb-eng',
+  'wales': 'gb-wls',
+  'scotland': 'gb-sct',
+  'ireland': 'ie',
+  'france': 'fr',
+  'australia': 'au',
+  'new zealand': 'nz',
+  'south africa': 'za',
+  'argentina': 'ar',
+  'fiji': 'fj',
+  'samoa': 'ws',
+  'tonga': 'to',
+  'italy': 'it',
+  'japan': 'jp',
+  'georgia': 'ge',
+  'romania': 'ro',
+  'uruguay': 'uy',
+  'canada': 'ca',
+  'usa': 'us',
+  'united states': 'us',
+  'spain': 'es',
+  'portugal': 'pt',
+  'namibia': 'na',
+  'kenya': 'ke',
+  'zimbabwe': 'zw',
+  'russia': 'ru',
+  'ukraine': 'ua',
+  'belgium': 'be',
+  'netherlands': 'nl',
+  'germany': 'de',
+  'brazil': 'br',
+  'chile': 'cl',
+  'hong kong': 'hk',
+  'singapore': 'sg',
+};
+
+function getFlagCode(nationality: string): string | null {
+  return NATIONALITY_TO_FLAG[nationality.toLowerCase()] ?? null;
+}
+
 interface PublicPlayer {
   id: string;
   first_name: string;
@@ -234,8 +275,7 @@ export default function PlayerProfileScreen() {
     outputRange: [0, tabIndicatorWidth],
   });
 
-  const nationalityCode = player.nationality ? player.nationality.toLowerCase().slice(0, 2) : null;
-  const flagUri = nationalityCode ? `https://flagcdn.com/w40/${nationalityCode}.png` : null;
+
 
   const clubDisplayName = primaryTeam?.club?.name ?? primaryTeam?.name ?? '';
 
@@ -283,9 +323,13 @@ export default function PlayerProfileScreen() {
           {player.secondary_position ? (
             <Text style={styles.secondaryPos}>{player.secondary_position}</Text>
           ) : null}
-          {flagUri ? (
-            <Image source={{ uri: flagUri }} style={styles.flagImage} resizeMode="contain" />
-          ) : null}
+          {player.nationality && getFlagCode(player.nationality) && (
+            <Image
+              source={{ uri: `https://flagcdn.com/w40/${getFlagCode(player.nationality)}.png` }}
+              style={{ width: 36, height: 24, borderRadius: 2 }}
+              resizeMode="contain"
+            />
+          )}
           <View style={styles.heroSeparator} />
           {clubDisplayName !== '' ? (
             <Text style={styles.clubNameText}>{clubDisplayName}</Text>
