@@ -125,7 +125,7 @@ export default function AccountScreen() {
           <View style={styles.infoCard}>
             <View style={styles.infoRow}>
               <Text style={styles.infoLabel}>App</Text>
-              <Text style={styles.infoValue}>Rugby Flow</Text>
+              <Text style={styles.infoValue}>Fifty22</Text>
             </View>
             <View style={[styles.infoRow, styles.infoRowLast]}>
               <Text style={styles.infoLabel}>Version</Text>

@@ -11,6 +11,7 @@ import {
   ScrollView,
   Animated,
   RefreshControl,
+  Image,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
@@ -182,7 +183,11 @@ export default function ScoresScreen() {
   return (
     <SafeAreaView style={styles.safe} edges={['top']}>
       <View style={styles.header}>
-        <Text style={styles.headerTitle}>Rugby Flow</Text>
+        <Image
+          source={require('@/assets/images/7ed917ba-da4b-4f6c-8254-196108fe23ea.png')}
+          style={styles.headerLogo}
+          resizeMode="contain"
+        />
         <View style={styles.headerActions}>
           <TouchableOpacity style={styles.iconBtn} onPress={toggleSearch}>
             <Text style={styles.iconText}>🔍</Text>
@@ -283,7 +288,7 @@ export default function ScoresScreen() {
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: DARK_BG },
   header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16, paddingVertical: 12 },
-  headerTitle: { color: BRAND_GREEN, fontSize: 24, fontWeight: '800', letterSpacing: -0.5 },
+  headerLogo: { width: 140, height: 36 },
   headerActions: { flexDirection: 'row', gap: 8 },
   iconBtn: { width: 36, height: 36, borderRadius: 18, backgroundColor: CARD_BG, alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: BORDER_COLOR },
   iconText: { fontSize: 16 },

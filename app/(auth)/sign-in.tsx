@@ -9,6 +9,7 @@ import {
   Platform,
   ScrollView,
   ActivityIndicator,
+  Image,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
@@ -58,10 +59,11 @@ export default function SignInScreen() {
         <ScrollView contentContainerStyle={styles.scrollContent} keyboardShouldPersistTaps="handled">
           {/* Logo / Title */}
           <View style={styles.logoSection}>
-            <View style={styles.logoCircle}>
-              <Text style={styles.logoEmoji}>🏉</Text>
-            </View>
-            <Text style={styles.appName}>Rugby Flow</Text>
+            <Image
+              source={require('@/assets/images/7ed917ba-da4b-4f6c-8254-196108fe23ea.png')}
+              style={styles.logo}
+              resizeMode="contain"
+            />
             <Text style={styles.tagline}>Your rugby companion</Text>
           </View>
 
@@ -131,17 +133,7 @@ const styles = StyleSheet.create({
   flex: { flex: 1 },
   scrollContent: { flexGrow: 1, justifyContent: 'center', padding: 24 },
   logoSection: { alignItems: 'center', marginBottom: 40 },
-  logoCircle: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
-    backgroundColor: BRAND_GREEN,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: 16,
-  },
-  logoEmoji: { fontSize: 36 },
-  appName: { color: TEXT_PRIMARY, fontSize: 28, fontWeight: '800', letterSpacing: -0.5 },
+  logo: { width: 200, height: 80, marginBottom: 8 },
   tagline: { color: TEXT_SECONDARY, fontSize: 14, marginTop: 4 },
   form: {
     backgroundColor: CARD_BG,

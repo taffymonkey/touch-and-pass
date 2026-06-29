@@ -10,6 +10,7 @@ import {
   Animated,
   RefreshControl,
   Alert,
+  Image,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
@@ -189,7 +190,11 @@ export default function ScoresScreen() {
     <SafeAreaView style={styles.safe} edges={['top']}>
       {/* Header */}
       <View style={styles.header}>
-        <Text style={styles.headerTitle}>Rugby Flow</Text>
+        <Image
+          source={require('@/assets/images/7ed917ba-da4b-4f6c-8254-196108fe23ea.png')}
+          style={styles.headerLogo}
+          resizeMode="contain"
+        />
         <View style={styles.headerActions}>
           <TouchableOpacity style={styles.iconBtn} onPress={toggleSearch}>
             <Text style={styles.iconText}>🔍</Text>
@@ -308,12 +313,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 12,
   },
-  headerTitle: {
-    color: BRAND_GREEN,
-    fontSize: 24,
-    fontWeight: '800',
-    letterSpacing: -0.5,
-  },
+  headerLogo: { width: 140, height: 36 },
   headerActions: {
     flexDirection: 'row',
     gap: 8,

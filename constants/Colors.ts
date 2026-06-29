@@ -1,4 +1,4 @@
-// Rugby Flow brand colours
+// Fifty22 brand colours
 export const BRAND_GREEN = '#1a472a';
 export const BRAND_CREAM = '#f5f0e8';
 export const DARK_BG = '#0d1f13';
