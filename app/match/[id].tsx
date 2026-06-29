@@ -281,51 +281,72 @@ export default function MatchDetailScreen() {
         end={{ x: 1, y: 0 }}
         style={styles.hero}
       >
-        <View style={styles.heroOverlay}>
-          <SafeAreaView edges={['top']}>
-            <View style={styles.heroTop}>
-              <TouchableOpacity style={styles.circleBtn} onPress={handleBack}>
-                <Text style={styles.circleBtnText}>‹</Text>
-              </TouchableOpacity>
-              <Text style={styles.competitionName} numberOfLines={1}>
-                {fixture.competition?.name ?? ''}
+        {/* Dark overlay */}
+        <View style={styles.heroOverlay} />
+
+        {/* Home watermark logo */}
+        {(fixture.home_team?.logo_url ?? fixture.home_team?.club?.logo_url) ? (
+          <Image
+            source={{ uri: (fixture.home_team?.logo_url ?? fixture.home_team?.club?.logo_url) as string }}
+            style={styles.heroWatermarkLeft}
+            resizeMode="contain"
+          />
+        ) : null}
+
+        {/* Away watermark logo */}
+        {(fixture.away_team?.logo_url ?? fixture.away_team?.club?.logo_url) ? (
+          <Image
+            source={{ uri: (fixture.away_team?.logo_url ?? fixture.away_team?.club?.logo_url) as string }}
+            style={styles.heroWatermarkRight}
+            resizeMode="contain"
+          />
+        ) : null}
+
+        <SafeAreaView edges={['top']} style={styles.heroSafeArea}>
+          {/* Top row: back + star */}
+          <View style={styles.heroTop}>
+            <TouchableOpacity style={styles.circleBtn} onPress={handleBack}>
+              <Text style={styles.circleBtnText}>‹</Text>
+            </TouchableOpacity>
+            {isLive && (
+              <View style={styles.liveBadge}>
+                <Animated.View style={[styles.liveDot, { opacity: livePulse }]} />
+                <Text style={styles.liveText}>LIVE</Text>
+              </View>
+            )}
+            <TouchableOpacity style={styles.circleBtn} onPress={handleFavourite}>
+              <Text style={[styles.circleBtnText, isFavourite && styles.starActive]}>
+                {isFavourite ? '★' : '☆'}
               </Text>
-              <TouchableOpacity style={styles.circleBtn} onPress={handleFavourite}>
-                <Text style={[styles.circleBtnText, isFavourite && styles.starActive]}>
-                  {isFavourite ? '★' : '☆'}
-                </Text>
-              </TouchableOpacity>
-            </View>
+            </TouchableOpacity>
+          </View>
 
-            <View style={styles.heroScoreRow}>
-              <View style={styles.heroTeam}>
-                <TeamBadge logoUrl={fixture.home_team?.logo_url ?? fixture.home_team?.club?.logo_url} name={fixture.home_team?.name ?? '?'} primaryColor={fixture.home_team?.primary_color} size={44} />
-                <Text style={styles.heroTeamName} numberOfLines={2}>{fixture.home_team?.name ?? 'TBC'}</Text>
-              </View>
+          {/* Score centre */}
+          <View style={styles.heroCentre}>
+            {isUpcoming ? (
+              <Text style={styles.heroKickOff}>{formatTime(fixture.match_date)}</Text>
+            ) : (
+              <Text style={styles.heroScore}>{homeScore} – {awayScore}</Text>
+            )}
+            {isCompleted && <Text style={styles.heroFT}>FT</Text>}
+            {fixture.match_phase && !isCompleted && (
+              <Text style={styles.heroPhase}>{fixture.match_phase}</Text>
+            )}
+          </View>
 
-              <View style={styles.heroCentre}>
-                {isLive && (
-                  <View style={styles.liveBadge}>
-                    <Animated.View style={[styles.liveDot, { opacity: livePulse }]} />
-                    <Text style={styles.liveText}>LIVE</Text>
-                  </View>
-                )}
-                {isUpcoming ? (
-                  <Text style={styles.heroKickOff}>{formatTime(fixture.match_date)}</Text>
-                ) : (
-                  <Text style={styles.heroScore}>{homeScore} – {awayScore}</Text>
-                )}
-                {isCompleted && <Text style={styles.heroFT}>FT</Text>}
-                {fixture.match_phase && <Text style={styles.heroPhase}>{fixture.match_phase}</Text>}
-              </View>
-
-              <View style={[styles.heroTeam, styles.heroTeamRight]}>
-                <TeamBadge logoUrl={fixture.away_team?.logo_url ?? fixture.away_team?.club?.logo_url} name={fixture.away_team?.name ?? '?'} primaryColor={fixture.away_team?.primary_color} size={44} />
-                <Text style={[styles.heroTeamName, styles.heroTeamNameRight]} numberOfLines={2}>{fixture.away_team?.name ?? 'TBC'}</Text>
-              </View>
-            </View>
-          </SafeAreaView>
-        </View>
+          {/* Bottom row: team names */}
+          <View style={styles.heroBottomRow}>
+            <Text style={styles.heroTeamNameLeft} numberOfLines={2}>
+              {fixture.home_team?.name ?? 'TBC'}
+            </Text>
+            <Text style={styles.heroPhaseBottom}>
+              {isCompleted ? 'FULL TIME' : isLive ? fixture.match_phase ?? '' : formatDate(fixture.match_date)}
+            </Text>
+            <Text style={styles.heroTeamNameRight} numberOfLines={2}>
+              {fixture.away_team?.name ?? 'TBC'}
+            </Text>
+          </View>
+        </SafeAreaView>
       </LinearGradient>
 
       {/* Tab bar */}
@@ -563,26 +584,83 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: DARK_BG },
   loadingContainer: { flex: 1, backgroundColor: DARK_BG, alignItems: 'center', justifyContent: 'center' },
   errorText: { color: TEXT_SECONDARY, fontSize: 16 },
-  hero: { minHeight: 200 },
-  heroOverlay: { backgroundColor: 'rgba(0,0,0,0.5)', flex: 1 },
-  heroTop: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16, paddingTop: 8, paddingBottom: 4 },
+  hero: { minHeight: 220, position: 'relative', overflow: 'hidden' },
+  heroOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(0,0,0,0.45)',
+  },
+  heroWatermarkLeft: {
+    position: 'absolute',
+    left: -20,
+    top: 0,
+    bottom: 0,
+    width: '55%',
+    opacity: 0.18,
+  },
+  heroWatermarkRight: {
+    position: 'absolute',
+    right: -20,
+    top: 0,
+    bottom: 0,
+    width: '55%',
+    opacity: 0.18,
+  },
+  heroSafeArea: { flex: 1 },
+  heroTop: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 16,
+    paddingTop: 8,
+    paddingBottom: 4,
+  },
   circleBtn: { width: 36, height: 36, borderRadius: 18, backgroundColor: 'rgba(0,0,0,0.4)', alignItems: 'center', justifyContent: 'center' },
   circleBtnText: { color: '#fff', fontSize: 22, fontWeight: '700', lineHeight: 28 },
   starActive: { color: '#f59e0b' },
-  competitionName: { flex: 1, color: 'rgba(255,255,255,0.8)', fontSize: 12, fontWeight: '600', textAlign: 'center', letterSpacing: 0.5 },
-  heroScoreRow: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, paddingVertical: 16, gap: 8 },
-  heroTeam: { flex: 1, alignItems: 'center', gap: 8 },
-  heroTeamRight: {},
-  heroTeamName: { color: '#fff', fontSize: 13, fontWeight: '700', textAlign: 'center', lineHeight: 18 },
-  heroTeamNameRight: { textAlign: 'center' },
-  heroCentre: { width: 100, alignItems: 'center', gap: 4 },
+  heroCentre: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 4,
+    paddingVertical: 8,
+  },
+  heroScore: { color: '#fff', fontSize: 52, fontWeight: '900', letterSpacing: 2 },
+  heroFT: { color: 'rgba(255,255,255,0.8)', fontSize: 16, fontWeight: '700', letterSpacing: 2 },
+  heroKickOff: { color: '#fff', fontSize: 32, fontWeight: '800' },
+  heroPhase: { color: 'rgba(255,255,255,0.75)', fontSize: 13, fontWeight: '600', letterSpacing: 1 },
+  heroBottomRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-end',
+    justifyContent: 'space-between',
+    paddingHorizontal: 16,
+    paddingBottom: 16,
+    gap: 8,
+  },
+  heroTeamNameLeft: {
+    flex: 1,
+    color: '#fff',
+    fontSize: 14,
+    fontWeight: '800',
+    textAlign: 'left',
+  },
+  heroTeamNameRight: {
+    flex: 1,
+    color: '#fff',
+    fontSize: 14,
+    fontWeight: '800',
+    textAlign: 'right',
+  },
+  heroPhaseBottom: {
+    color: 'rgba(255,255,255,0.7)',
+    fontSize: 11,
+    fontWeight: '600',
+    letterSpacing: 1,
+    textAlign: 'center',
+    flexShrink: 1,
+  },
   liveBadge: { flexDirection: 'row', alignItems: 'center', gap: 4 },
   liveDot: { width: 6, height: 6, borderRadius: 3, backgroundColor: LIVE_RED },
   liveText: { color: LIVE_RED, fontSize: 10, fontWeight: '700', letterSpacing: 0.5 },
-  heroScore: { color: '#fff', fontSize: 32, fontWeight: '900', letterSpacing: 2 },
-  heroKickOff: { color: '#fff', fontSize: 24, fontWeight: '800' },
-  heroFT: { color: 'rgba(255,255,255,0.7)', fontSize: 12, fontWeight: '700', letterSpacing: 1 },
-  heroPhase: { color: 'rgba(255,255,255,0.6)', fontSize: 11, letterSpacing: 0.5 },
   tabBar: {
     flexDirection: 'row',
     backgroundColor: CARD_BG,
