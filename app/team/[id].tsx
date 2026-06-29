@@ -355,7 +355,7 @@ export default function TeamProfileScreen() {
               {(team.away_kit_image_url || team.club?.away_kit_image_url) ? (
                 <Image
                   source={{ uri: team.away_kit_image_url ?? team.club?.away_kit_image_url ?? '' }}
-                  style={styles.kitImage}
+                  style={[styles.kitImage, { width: 136, height: 170 }]}
                   resizeMode="contain"
                 />
               ) : (
