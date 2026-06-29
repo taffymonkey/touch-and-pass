@@ -1,9 +1,9 @@
 // Fifty22 brand colours
 export const BRAND_GREEN = '#1a472a';
 export const BRAND_CREAM = '#f5f0e8';
-export const DARK_BG = '#0d1f13';
-export const CARD_BG = '#1a2e1f';
-export const BORDER_COLOR = '#2d4a33';
+export const DARK_BG = '#0a0a0a';
+export const CARD_BG = '#141414';
+export const BORDER_COLOR = '#2a2a2a';
 export const TEXT_PRIMARY = '#f5f0e8';
 export const TEXT_SECONDARY = '#9aab9e';
 export const LIVE_RED = '#ef4444';
