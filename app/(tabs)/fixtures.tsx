@@ -300,11 +300,11 @@ const styles = StyleSheet.create({
     gap: 10,
     paddingVertical: 10,
     borderBottomWidth: 1,
-    borderBottomColor: BORDER_COLOR,
+    borderBottomColor: '#2a2a2a',
     marginBottom: 8,
   },
   teamName: {
-    color: TEXT_PRIMARY,
+    color: '#f5f0e8',
     fontSize: 16,
     fontWeight: '700',
   },
@@ -323,5 +323,5 @@ const styles = StyleSheet.create({
   emptySubText: { color: TEXT_SECONDARY, fontSize: 13, textAlign: 'center', lineHeight: 20, marginTop: 4 },
   browseButton: { marginTop: 16, backgroundColor: BRAND_GREEN, paddingHorizontal: 28, paddingVertical: 12, borderRadius: 24 },
   browseButtonText: { color: '#fff', fontSize: 15, fontWeight: '700' },
-  teamChevron: { color: TEXT_SECONDARY, fontSize: 18, marginLeft: 'auto' },
+  teamChevron: { color: '#9aab9e', fontSize: 18, marginLeft: 'auto' },
 });
