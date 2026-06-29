@@ -1,7 +1,7 @@
 {
   "expo": {
-    "name": "Rugby Flow",
-    "slug": "rugby-flow",
+    "name": "Pitchside",
+    "slug": "pitchside",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/4b495c8d-303a-40bf-a74a-d3725f478b34-2026-05-03_1777818414969.png",
@@ -35,7 +35,7 @@
       "expo-web-browser",
       "expo-secure-store"
     ],
-    "scheme": "rugbyflow",
+    "scheme": "pitchside",
     "experiments": {
       "typedRoutes": true
     },
