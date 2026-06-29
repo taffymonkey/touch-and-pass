@@ -476,31 +476,39 @@ export default function PlayerProfileScreen() {
         {/* History tab */}
         {activeTab === 1 ? (
           <View style={styles.historyTab}>
+
+            {/* TEAMS PLAYED FOR */}
             {registrations.length > 0 ? (
-              <View style={styles.historySection}>
-                <Text style={styles.historySectionTitle}>Teams Played For</Text>
+              <View>
+                <Text style={styles.historySectionTitle}>TEAMS PLAYED FOR</Text>
                 {registrations.map(reg => (
                   <View key={reg.team_id} style={styles.historyTeamRow}>
                     <TeamBadge
                       logoUrl={reg.team?.club?.logo_url ?? reg.team?.logo_url}
                       name={reg.team?.name ?? '?'}
                       primaryColor={reg.team?.primary_color}
-                      size={36}
+                      size={48}
                     />
                     <View style={styles.historyTeamInfo}>
                       <Text style={styles.historyTeamName}>{reg.team?.name}</Text>
-                      {reg.team?.age_group ? (
-                        <Text style={styles.historyTeamMeta}>{reg.team.age_group}</Text>
-                      ) : null}
+                      <Text style={styles.historyTeamMeta}>
+                        {[reg.team?.age_group, '2025–2026'].filter(Boolean).join('  ')}
+                      </Text>
                     </View>
+                    {reg.is_primary ? (
+                      <View style={styles.primaryBadge}>
+                        <Text style={styles.primaryBadgeText}>Primary</Text>
+                      </View>
+                    ) : null}
                   </View>
                 ))}
               </View>
             ) : null}
 
-            <View style={styles.historySection}>
-              <Text style={styles.historySectionTitle}>All Games</Text>
-              {recentFixtures.length === 0 ? (
+            {/* ALL GAMES */}
+            <View>
+              <Text style={styles.historySectionTitle}>ALL GAMES</Text>
+              {Array.from(fixtureMap.values()).length === 0 ? (
                 <View style={styles.empty}>
                   <Text style={styles.emptyText}>No game history</Text>
                 </View>
@@ -513,25 +521,51 @@ export default function PlayerProfileScreen() {
                     const awayId = fixture.away_team?.id ?? '';
                     const homeScore = computeScoreForTeam(fEvents.map(e => ({ ...e, fixture })), homeId);
                     const awayScore = computeScoreForTeam(fEvents.map(e => ({ ...e, fixture })), awayId);
-                    const historyDateDisplay = formatShortDate(fixture.match_date);
-                    const historyScoreDisplay = `${homeScore} – ${awayScore}`;
+
+                    const d = new Date(fixture.match_date);
+                    const dateStr = d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: '2-digit' }).toUpperCase();
+
+                    const fTries = fEvents.filter(e => e.event_type === 'try').length;
+                    const fConversions = fEvents.filter(e => e.event_type === 'conversion').length;
+                    const fPenalties = fEvents.filter(e => e.event_type === 'penalty').length;
+                    const fDropGoals = fEvents.filter(e => e.event_type === 'drop_goal').length;
+                    const fRedCards = fEvents.filter(e => e.event_type === 'red_card').length;
+                    const fYellowCards = fEvents.filter(e => e.event_type === 'yellow_card').length;
+
+                    const badges = [
+                      { label: `T${fTries}`, active: fTries > 0 },
+                      { label: `C${fConversions}`, active: fConversions > 0 },
+                      { label: `P${fPenalties}`, active: fPenalties > 0 },
+                      { label: `D${fDropGoals}`, active: fDropGoals > 0 },
+                      { label: `RC${fRedCards}`, active: fRedCards > 0 },
+                      { label: `YC${fYellowCards}`, active: fYellowCards > 0 },
+                    ];
+
                     return (
                       <TouchableOpacity
                         key={fixture.id}
                         style={styles.historyGameRow}
                         onPress={() => handleFixturePress(fixture.id)}
                       >
-                        <Text style={styles.historyDate}>{historyDateDisplay}</Text>
+                        {/* Green date on left */}
+                        <Text style={styles.historyDate}>{dateStr}</Text>
+
+                        {/* Centre: home team, v, away team, badges */}
                         <View style={styles.historyMatchup}>
-                          <TeamBadge logoUrl={fixture.home_team?.logo_url ?? fixture.home_team?.club?.logo_url} name={fixture.home_team?.name ?? '?'} primaryColor={fixture.home_team?.primary_color} size={24} />
-                          <Text style={styles.historyScore}>{historyScoreDisplay}</Text>
-                          <TeamBadge logoUrl={fixture.away_team?.logo_url ?? fixture.away_team?.club?.logo_url} name={fixture.away_team?.name ?? '?'} primaryColor={fixture.away_team?.primary_color} size={24} />
+                          <Text style={styles.historyTeamLabel}>{fixture.home_team?.name ?? 'TBC'}</Text>
+                          <Text style={styles.historyVs}>v</Text>
+                          <Text style={styles.historyTeamLabel}>{fixture.away_team?.name ?? 'TBC'}</Text>
+                          <View style={styles.historyBadges}>
+                            {badges.map(b => (
+                              <Text key={b.label} style={[styles.historyBadgeText, b.active ? styles.badgeActive : styles.badgeZero]}>
+                                {b.label}
+                              </Text>
+                            ))}
+                          </View>
                         </View>
-                        <View style={styles.historyEvents}>
-                          {fEvents.map(e => (
-                            <EventIcon key={e.id} type={e.event_type} size={18} />
-                          ))}
-                        </View>
+
+                        {/* Score on right */}
+                        <Text style={styles.historyScore}>{homeScore}–{awayScore}</Text>
                       </TouchableOpacity>
                     );
                   })
@@ -612,21 +646,57 @@ const styles = StyleSheet.create({
   squadInfo: { flex: 1 },
   squadTeamName: { color: TEXT_PRIMARY, fontSize: 15, fontWeight: '700' },
   squadAgeGroup: { color: TEXT_SECONDARY, fontSize: 13, marginTop: 2 },
-  primaryBadge: { paddingHorizontal: 12, paddingVertical: 6, borderRadius: 16, backgroundColor: BRAND_GREEN },
-  primaryBadgeText: { color: '#fff', fontSize: 12, fontWeight: '700' },
+  primaryBadge: { paddingHorizontal: 14, paddingVertical: 7, borderRadius: 16, backgroundColor: BRAND_GREEN },
+  primaryBadgeText: { color: '#fff', fontSize: 13, fontWeight: '700' },
 
   // History tab
-  historyTab: { padding: 16, gap: 16 },
+  historyTab: { paddingTop: 8, paddingBottom: 120 },
   historySection: { gap: 8 },
-  historySectionTitle: { color: TEXT_SECONDARY, fontSize: 11, fontWeight: '700', letterSpacing: 1, textTransform: 'uppercase' },
-  historyTeamRow: { flexDirection: 'row', alignItems: 'center', paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: BORDER_COLOR, gap: 10 },
+  historySectionTitle: {
+    color: TEXT_SECONDARY,
+    fontSize: 11,
+    fontWeight: '700',
+    letterSpacing: 1.5,
+    textTransform: 'uppercase',
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+    borderBottomWidth: 1,
+    borderBottomColor: BORDER_COLOR,
+  },
+  historyTeamRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+    borderBottomWidth: 1,
+    borderBottomColor: BORDER_COLOR,
+    gap: 14,
+  },
   historyTeamInfo: { flex: 1 },
-  historyTeamName: { color: TEXT_PRIMARY, fontSize: 14, fontWeight: '600' },
-  historyTeamMeta: { color: TEXT_SECONDARY, fontSize: 12, marginTop: 2 },
-  historyGameRow: { flexDirection: 'row', alignItems: 'center', paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: BORDER_COLOR, gap: 8 },
-  historyDate: { color: TEXT_SECONDARY, fontSize: 11, width: 60 },
-  historyMatchup: { flex: 1, flexDirection: 'row', alignItems: 'center', gap: 6 },
-  historyScore: { color: TEXT_PRIMARY, fontSize: 13, fontWeight: '700', flex: 1, textAlign: 'center' },
+  historyTeamName: { color: TEXT_PRIMARY, fontSize: 16, fontWeight: '700' },
+  historyTeamMeta: { color: TEXT_SECONDARY, fontSize: 13, marginTop: 3 },
+  historyGameRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+    borderBottomWidth: 1,
+    borderBottomColor: BORDER_COLOR,
+    gap: 12,
+  },
+  historyDate: {
+    color: BRAND_GREEN,
+    fontSize: 12,
+    fontWeight: '700',
+    width: 64,
+    paddingTop: 2,
+  },
+  historyMatchup: { flex: 1, gap: 2 },
+  historyTeamLabel: { color: TEXT_PRIMARY, fontSize: 14, fontWeight: '600' },
+  historyVs: { color: TEXT_SECONDARY, fontSize: 12 },
+  historyBadges: { flexDirection: 'row', gap: 6, marginTop: 4, flexWrap: 'wrap' },
+  historyBadgeText: { fontSize: 11, fontWeight: '700' },
+  historyScore: { color: TEXT_PRIMARY, fontSize: 16, fontWeight: '800', paddingTop: 2 },
   historyEvents: { flexDirection: 'row', gap: 4 },
   empty: { alignItems: 'center', paddingVertical: 40 },
   emptyText: { color: TEXT_SECONDARY, fontSize: 15 },
