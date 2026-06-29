@@ -327,7 +327,9 @@ export default function TeamProfileScreen() {
               {/* Kit panels */}
               <View style={styles.kitPanel}>
                 {(team.home_kit_image_url || team.club?.home_kit_image_url) ? (
-                  <Image source={{ uri: team.home_kit_image_url ?? team.club?.home_kit_image_url ?? '' }} style={styles.kitImage} resizeMode="contain" />
+                  <View style={styles.kitImageWrapper}>
+                    <Image source={{ uri: team.home_kit_image_url ?? team.club?.home_kit_image_url ?? '' }} style={styles.kitImage} resizeMode="contain" />
+                  </View>
                 ) : (
                   <View style={[styles.kitPlaceholder, { backgroundColor: primaryColor }]}>
                     <Text style={styles.kitPlaceholderText}>Home</Text>
@@ -348,7 +350,9 @@ export default function TeamProfileScreen() {
 
               <View style={styles.kitPanel}>
                 {(team.away_kit_image_url || team.club?.away_kit_image_url) ? (
-                  <Image source={{ uri: team.away_kit_image_url ?? team.club?.away_kit_image_url ?? '' }} style={styles.kitImage} resizeMode="contain" />
+                  <View style={styles.kitImageWrapper}>
+                    <Image source={{ uri: team.away_kit_image_url ?? team.club?.away_kit_image_url ?? '' }} style={styles.kitImage} resizeMode="contain" />
+                  </View>
                 ) : (
                   <View style={[styles.kitPlaceholder, { backgroundColor: `${primaryColor}66` }]}>
                     <Text style={styles.kitPlaceholderText}>Away</Text>
@@ -524,8 +528,24 @@ const styles = StyleSheet.create({
   starActive: { color: '#f59e0b' },
   heroContent: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, paddingVertical: 16, gap: 8 },
   kitPanel: { flex: 1.2, alignItems: 'center', justifyContent: 'center' },
-  kitImage: { width: 90, height: 115, borderRadius: 8, borderWidth: 2, borderColor: '#7dd3fc' },
-  kitPlaceholder: { width: 90, height: 115, borderRadius: 8, borderWidth: 2, borderColor: '#7dd3fc', alignItems: 'center', justifyContent: 'center', opacity: 0.6 },
+  kitImage: {
+    width: 90,
+    height: 115,
+  },
+  kitPlaceholder: {
+    width: 90,
+    height: 115,
+    borderRadius: 6,
+    alignItems: 'center',
+    justifyContent: 'center',
+    opacity: 0.6,
+  },
+  kitImageWrapper: {
+    borderWidth: 1.5,
+    borderColor: '#ADD8E6',
+    borderRadius: 6,
+    padding: 2,
+  },
   kitPlaceholderText: { color: '#fff', fontSize: 11, fontWeight: '600' },
   heroCentre: { flex: 2, alignItems: 'center', gap: 6 },
   clubName: { color: 'rgba(255,255,255,0.7)', fontSize: 12, fontWeight: '600' },
