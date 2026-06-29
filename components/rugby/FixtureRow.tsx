@@ -15,6 +15,7 @@ export interface TeamLite {
   name: string;
   primary_color?: string | null;
   logo_url?: string | null;
+  club?: { logo_url?: string | null } | null;
 }
 
 export interface FixtureLite {
@@ -102,7 +103,7 @@ export default function FixtureRow({ fixture, onPress, teamId }: FixtureRowProps
         {/* Home team */}
         <View style={styles.teamSide}>
           <TeamBadge
-            logoUrl={fixture.home_team?.logo_url}
+            logoUrl={fixture.home_team?.logo_url ?? fixture.home_team?.club?.logo_url}
             name={fixture.home_team?.name ?? '?'}
             primaryColor={fixture.home_team?.primary_color}
             size={32}
@@ -130,7 +131,7 @@ export default function FixtureRow({ fixture, onPress, teamId }: FixtureRowProps
             {fixture.away_team?.name ?? 'TBC'}
           </Text>
           <TeamBadge
-            logoUrl={fixture.away_team?.logo_url}
+            logoUrl={fixture.away_team?.logo_url ?? fixture.away_team?.club?.logo_url}
             name={fixture.away_team?.name ?? '?'}
             primaryColor={fixture.away_team?.primary_color}
             size={32}

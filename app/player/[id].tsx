@@ -49,8 +49,8 @@ interface PlayerEvent {
     id: string;
     match_date: string;
     status: string;
-    home_team: { id: string; name: string; primary_color: string | null; logo_url: string | null } | null;
-    away_team: { id: string; name: string; primary_color: string | null; logo_url: string | null } | null;
+    home_team: { id: string; name: string; primary_color: string | null; logo_url: string | null; club?: { logo_url: string | null } | null } | null;
+    away_team: { id: string; name: string; primary_color: string | null; logo_url: string | null; club?: { logo_url: string | null } | null } | null;
   } | null;
 }
 
@@ -111,7 +111,7 @@ export default function PlayerProfileScreen() {
       supabase.from('public_players').select('*').eq('id', id).single(),
       supabase
         .from('match_events')
-        .select(`*, fixture:fixtures(id, match_date, status, home_team:teams!fixtures_home_team_id_fkey(id, name, primary_color, logo_url), away_team:teams!fixtures_away_team_id_fkey(id, name, primary_color, logo_url))`)
+        .select(`*, fixture:fixtures(id, match_date, status, home_team:teams!fixtures_home_team_id_fkey(id, name, primary_color, logo_url, club:clubs(logo_url)), away_team:teams!fixtures_away_team_id_fkey(id, name, primary_color, logo_url, club:clubs(logo_url)))`)
         .eq('owning_player_id', id),
       supabase
         .from('player_team_registrations')
@@ -344,9 +344,9 @@ export default function PlayerProfileScreen() {
                       >
                         <Text style={styles.recentDate}>{formatShortDate(fixture.match_date)}</Text>
                         <View style={styles.recentTeams}>
-                          <TeamBadge logoUrl={fixture.home_team?.logo_url} name={fixture.home_team?.name ?? '?'} primaryColor={fixture.home_team?.primary_color} size={20} />
+                          <TeamBadge logoUrl={fixture.home_team?.logo_url ?? fixture.home_team?.club?.logo_url} name={fixture.home_team?.name ?? '?'} primaryColor={fixture.home_team?.primary_color} size={20} />
                           <Text style={styles.recentScore}>{homeScore}–{awayScore}</Text>
-                          <TeamBadge logoUrl={fixture.away_team?.logo_url} name={fixture.away_team?.name ?? '?'} primaryColor={fixture.away_team?.primary_color} size={20} />
+                          <TeamBadge logoUrl={fixture.away_team?.logo_url ?? fixture.away_team?.club?.logo_url} name={fixture.away_team?.name ?? '?'} primaryColor={fixture.away_team?.primary_color} size={20} />
                         </View>
                         <View style={styles.recentEvents}>
                           {fEvents.slice(0, 3).map(e => (
@@ -438,9 +438,9 @@ export default function PlayerProfileScreen() {
                       >
                         <Text style={styles.historyDate}>{formatShortDate(fixture.match_date)}</Text>
                         <View style={styles.historyMatchup}>
-                          <TeamBadge logoUrl={fixture.home_team?.logo_url} name={fixture.home_team?.name ?? '?'} primaryColor={fixture.home_team?.primary_color} size={24} />
+                          <TeamBadge logoUrl={fixture.home_team?.logo_url ?? fixture.home_team?.club?.logo_url} name={fixture.home_team?.name ?? '?'} primaryColor={fixture.home_team?.primary_color} size={24} />
                           <Text style={styles.historyScore}>{homeScore} – {awayScore}</Text>
-                          <TeamBadge logoUrl={fixture.away_team?.logo_url} name={fixture.away_team?.name ?? '?'} primaryColor={fixture.away_team?.primary_color} size={24} />
+                          <TeamBadge logoUrl={fixture.away_team?.logo_url ?? fixture.away_team?.club?.logo_url} name={fixture.away_team?.name ?? '?'} primaryColor={fixture.away_team?.primary_color} size={24} />
                         </View>
                         <View style={styles.historyEvents}>
                           {fEvents.map(e => (

@@ -69,8 +69,8 @@ export default function FavouritesScreen() {
           .from('fixtures')
           .select(`
             *,
-            home_team:teams!fixtures_home_team_id_fkey(id, name, primary_color, logo_url),
-            away_team:teams!fixtures_away_team_id_fkey(id, name, primary_color, logo_url),
+            home_team:teams!fixtures_home_team_id_fkey(id, name, primary_color, logo_url, club:clubs(logo_url)),
+            away_team:teams!fixtures_away_team_id_fkey(id, name, primary_color, logo_url, club:clubs(logo_url)),
             competition:competitions(id, name),
             match_events(id, event_type, owning_team_id)
           `)

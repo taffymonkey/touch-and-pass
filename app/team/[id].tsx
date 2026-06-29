@@ -108,7 +108,7 @@ export default function TeamProfileScreen() {
       supabase.from('teams').select(`*, club:clubs(*)`).eq('id', id).single(),
       supabase
         .from('fixtures')
-        .select(`*, home_team:teams!fixtures_home_team_id_fkey(id, name, primary_color, logo_url), away_team:teams!fixtures_away_team_id_fkey(id, name, primary_color, logo_url), competition:competitions(id, name), match_events(id, event_type, owning_team_id)`)
+        .select(`*, home_team:teams!fixtures_home_team_id_fkey(id, name, primary_color, logo_url, club:clubs(logo_url)), away_team:teams!fixtures_away_team_id_fkey(id, name, primary_color, logo_url, club:clubs(logo_url)), competition:competitions(id, name), match_events(id, event_type, owning_team_id)`)
         .or(`home_team_id.eq.${id},away_team_id.eq.${id}`)
         .order('match_date', { ascending: false }),
       supabase
@@ -415,8 +415,8 @@ export default function TeamProfileScreen() {
                     return (
                       <TouchableOpacity key={f.id} style={styles.last5Card} onPress={() => handleFixturePress(f.id)}>
                         <View style={styles.last5Badges}>
-                          <TeamBadge logoUrl={homeTeam?.logo_url} name={homeTeam?.name ?? '?'} primaryColor={homeTeam?.primary_color} size={32} />
-                          <TeamBadge logoUrl={awayTeam?.logo_url} name={awayTeam?.name ?? '?'} primaryColor={awayTeam?.primary_color} size={32} />
+                          <TeamBadge logoUrl={homeTeam?.logo_url ?? (homeTeam as any)?.club?.logo_url} name={homeTeam?.name ?? '?'} primaryColor={homeTeam?.primary_color} size={32} />
+                          <TeamBadge logoUrl={awayTeam?.logo_url ?? (awayTeam as any)?.club?.logo_url} name={awayTeam?.name ?? '?'} primaryColor={awayTeam?.primary_color} size={32} />
                         </View>
                         <Text style={styles.last5Score}>{myScore}–{oppScore}</Text>
                         <Text style={styles.last5Date}>{formatShortDate(f.match_date)}</Text>

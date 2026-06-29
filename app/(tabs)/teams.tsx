@@ -179,7 +179,7 @@ export default function TeamsScreen() {
       style={styles.teamRow}
       onPress={() => handleTeamPress(team.id)}
     >
-      <TeamBadge logoUrl={team.logo_url} name={team.name} primaryColor={team.primary_color} size={36} />
+      <TeamBadge logoUrl={team.logo_url ?? team.clubLogo} name={team.name} primaryColor={team.primary_color} size={36} />
       <View style={styles.teamInfo}>
         <Text style={styles.teamName}>{team.name}</Text>
         <View style={styles.teamMeta}>
