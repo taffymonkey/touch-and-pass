@@ -143,7 +143,7 @@ export default function MatchDetailScreen() {
         .order('jersey_number', { ascending: true }),
       supabase
         .from('match_events')
-        .select(`*, player:players!match_events_owning_player_id_fkey(id, first_name, last_name), replaced_by:players!match_events_replaced_by_player_id_fkey(id, first_name, last_name)`)
+        .select(`*, player:players!match_events_player_id_fkey(id, first_name, last_name), replaced_by:players!match_events_replaced_by_player_id_fkey(id, first_name, last_name)`)
         .eq('fixture_id', id)
         .order('minute', { ascending: true }),
     ]);
