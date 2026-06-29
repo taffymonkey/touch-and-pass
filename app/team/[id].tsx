@@ -305,63 +305,67 @@ export default function TeamProfileScreen() {
     <View style={styles.container}>
       {/* Hero */}
       <LinearGradient
-        colors={[primaryColor, `${primaryColor}88`]}
+        colors={['#0d2b14', '#0a1a0d']}
         start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 1 }}
+        end={{ x: 0, y: 1 }}
         style={styles.hero}
       >
-        <View style={styles.heroOverlay}>
-          <SafeAreaView edges={['top']}>
-            <View style={styles.heroTop}>
-              <TouchableOpacity style={styles.circleBtn} onPress={handleBack}>
-                <Text style={styles.circleBtnText}>‹</Text>
-              </TouchableOpacity>
-              <TouchableOpacity style={styles.circleBtn} onPress={handleFavourite}>
-                <Text style={[styles.circleBtnText, isFavourite && styles.starActive]}>
-                  {isFavourite ? '★' : '☆'}
-                </Text>
-              </TouchableOpacity>
+        <SafeAreaView edges={['top']}>
+          <View style={styles.heroTop}>
+            <TouchableOpacity style={styles.circleBtn} onPress={handleBack}>
+              <Text style={styles.circleBtnText}>‹</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.circleBtn} onPress={handleFavourite}>
+              <Text style={[styles.circleBtnText, isFavourite && styles.starActive]}>
+                {isFavourite ? '★' : '☆'}
+              </Text>
+            </TouchableOpacity>
+          </View>
+
+          <View style={styles.heroContent}>
+            {/* Home kit */}
+            <View style={styles.kitPanel}>
+              {(team.home_kit_image_url || team.club?.home_kit_image_url) ? (
+                <Image
+                  source={{ uri: team.home_kit_image_url ?? team.club?.home_kit_image_url ?? '' }}
+                  style={styles.kitImage}
+                  resizeMode="contain"
+                />
+              ) : (
+                <View style={[styles.kitPlaceholder, { backgroundColor: primaryColor }]}>
+                  <Text style={styles.kitPlaceholderText}>Home</Text>
+                </View>
+              )}
             </View>
 
-            <View style={styles.heroContent}>
-              {/* Kit panels */}
-              <View style={styles.kitPanel}>
-                {(team.home_kit_image_url || team.club?.home_kit_image_url) ? (
-                  <View style={styles.kitImageWrapper}>
-                    <Image source={{ uri: team.home_kit_image_url ?? team.club?.home_kit_image_url ?? '' }} style={styles.kitImage} resizeMode="contain" />
-                  </View>
-                ) : (
-                  <View style={[styles.kitPlaceholder, { backgroundColor: primaryColor }]}>
-                    <Text style={styles.kitPlaceholderText}>Home</Text>
-                  </View>
-                )}
-              </View>
-
-              <View style={styles.heroCentre}>
-                <TeamBadge logoUrl={team.club?.logo_url} name={team.club?.name ?? team.name} primaryColor={team.club?.primary_color} size={56} />
-                <Text style={styles.clubName}>{team.club?.name ?? ''}</Text>
-                <Text style={styles.teamName}>{team.name}</Text>
-                {team.age_group && (
-                  <View style={styles.agePill}>
-                    <Text style={styles.agePillText}>{team.age_group}</Text>
-                  </View>
-                )}
-              </View>
-
-              <View style={styles.kitPanel}>
-                {(team.away_kit_image_url || team.club?.away_kit_image_url) ? (
-                  <View style={styles.kitImageWrapper}>
-                    <Image source={{ uri: team.away_kit_image_url ?? team.club?.away_kit_image_url ?? '' }} style={styles.kitImage} resizeMode="contain" />
-                  </View>
-                ) : (
-                  <View style={[styles.kitPlaceholder, { backgroundColor: `${primaryColor}66` }]}>
-                    <Text style={styles.kitPlaceholderText}>Away</Text>
-                  </View>
-                )}
-              </View>
+            {/* Centre info */}
+            <View style={styles.heroCentre}>
+              <TeamBadge logoUrl={team.club?.logo_url} name={team.club?.name ?? team.name} primaryColor={team.club?.primary_color} size={64} />
+              <Text style={styles.clubName}>{team.club?.name ?? ''}</Text>
+              <Text style={styles.teamName}>{team.name}</Text>
+              {team.age_group && (
+                <View style={styles.agePill}>
+                  <Text style={styles.agePillText}>{team.age_group}</Text>
+                </View>
+              )}
             </View>
-          </SafeAreaView>
-        </View>
+
+            {/* Away kit */}
+            <View style={styles.kitPanel}>
+              {(team.away_kit_image_url || team.club?.away_kit_image_url) ? (
+                <Image
+                  source={{ uri: team.away_kit_image_url ?? team.club?.away_kit_image_url ?? '' }}
+                  style={styles.kitImage}
+                  resizeMode="contain"
+                />
+              ) : (
+                <View style={[styles.kitPlaceholder, { backgroundColor: `${primaryColor}66` }]}>
+                  <Text style={styles.kitPlaceholderText}>Away</Text>
+                </View>
+              )}
+            </View>
+          </View>
+        </SafeAreaView>
       </LinearGradient>
 
       {/* Tab bar */}
@@ -392,7 +396,12 @@ export default function TeamProfileScreen() {
 
             {last5.length > 0 && (
               <View style={styles.overviewSection}>
-                <Text style={styles.overviewSectionTitle}>Last 5 Games</Text>
+                <View style={styles.sectionHeaderRow}>
+                  <Text style={styles.overviewSectionTitle}>Last 5 Games</Text>
+                  <TouchableOpacity onPress={() => handleTabPress(1)}>
+                    <Text style={styles.allResultsLink}>All Results ›</Text>
+                  </TouchableOpacity>
+                </View>
                 <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.last5Row}>
                   {last5.map(f => {
                     const events = f.match_events ?? [];
@@ -401,15 +410,17 @@ export default function TeamProfileScreen() {
                     const oppScore = computeScore(events, oppId);
                     const result = myScore > oppScore ? 'W' : myScore === oppScore ? 'D' : 'L';
                     const resultColor = result === 'W' ? LIVE_GREEN : result === 'D' ? '#f59e0b' : '#ef4444';
-                    const opp = f.home_team?.id === id ? f.away_team : f.home_team;
+                    const homeTeam = f.home_team;
+                    const awayTeam = f.away_team;
                     return (
                       <TouchableOpacity key={f.id} style={styles.last5Card} onPress={() => handleFixturePress(f.id)}>
-                        <View style={[styles.last5Result, { backgroundColor: resultColor }]}>
-                          <Text style={styles.last5ResultText}>{result}</Text>
+                        <View style={styles.last5Badges}>
+                          <TeamBadge logoUrl={homeTeam?.logo_url} name={homeTeam?.name ?? '?'} primaryColor={homeTeam?.primary_color} size={32} />
+                          <TeamBadge logoUrl={awayTeam?.logo_url} name={awayTeam?.name ?? '?'} primaryColor={awayTeam?.primary_color} size={32} />
                         </View>
-                        <TeamBadge logoUrl={opp?.logo_url} name={opp?.name ?? '?'} primaryColor={opp?.primary_color} size={28} />
                         <Text style={styles.last5Score}>{myScore}–{oppScore}</Text>
                         <Text style={styles.last5Date}>{formatShortDate(f.match_date)}</Text>
+                        <View style={[styles.last5Bar, { backgroundColor: resultColor }]} />
                       </TouchableOpacity>
                     );
                   })}
@@ -417,24 +428,30 @@ export default function TeamProfileScreen() {
               </View>
             )}
 
+            {/* GAMES */}
             <View style={styles.overviewSection}>
-              <Text style={styles.overviewSectionTitle}>Season Stats</Text>
+              <Text style={styles.overviewSectionTitle}>Games</Text>
               <View style={styles.statsGrid}>
                 {[
                   { label: 'Played', value: completedFixtures.length },
                   { label: 'Wins', value: wins },
-                  { label: 'Losses', value: losses },
+                  { label: 'Losses', value: losses, negative: true },
                 ].map(s => (
                   <View key={s.label} style={styles.statCard}>
-                    <Text style={styles.statValue}>{s.value}</Text>
+                    <Text style={[styles.statValue, s.negative && losses > 0 ? styles.statNegative : null]}>{s.value}</Text>
                     <Text style={styles.statLabel}>{s.label}</Text>
                   </View>
                 ))}
               </View>
+            </View>
+
+            {/* SCORING */}
+            <View style={styles.overviewSection}>
+              <Text style={styles.overviewSectionTitle}>Scoring</Text>
               <View style={styles.statsGrid}>
                 {[
                   { label: 'Tries', value: totalTries },
-                  { label: 'Conversions', value: totalConversions },
+                  { label: 'Conv.', value: totalConversions },
                   { label: 'Penalties', value: totalPenalties },
                   { label: 'Drop Goals', value: totalDropGoals },
                 ].map(s => (
@@ -444,15 +461,20 @@ export default function TeamProfileScreen() {
                   </View>
                 ))}
               </View>
+            </View>
+
+            {/* POINTS */}
+            <View style={styles.overviewSection}>
+              <Text style={styles.overviewSectionTitle}>Points</Text>
               <View style={styles.statsGrid}>
                 {[
-                  { label: 'Points For', value: totalFor },
-                  { label: 'Points Against', value: totalAgainst },
-                  { label: 'Diff', value: totalFor - totalAgainst },
+                  { label: 'For', value: totalFor },
+                  { label: 'Against', value: totalAgainst },
+                  { label: 'Diff', value: totalFor - totalAgainst, isDiff: true },
                 ].map(s => (
                   <View key={s.label} style={styles.statCard}>
-                    <Text style={[styles.statValue, s.label === 'Diff' && (totalFor - totalAgainst) >= 0 ? styles.statPositive : styles.statNegative]}>
-                      {s.label === 'Diff' && (totalFor - totalAgainst) > 0 ? '+' : ''}{s.value}
+                    <Text style={[styles.statValue, s.isDiff ? ((totalFor - totalAgainst) >= 0 ? styles.statPositive : styles.statNegative) : null]}>
+                      {s.isDiff && (totalFor - totalAgainst) > 0 ? '+' : ''}{s.value}
                     </Text>
                     <Text style={styles.statLabel}>{s.label}</Text>
                   </View>
@@ -520,38 +542,22 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: DARK_BG },
   loadingContainer: { flex: 1, backgroundColor: DARK_BG, alignItems: 'center', justifyContent: 'center' },
   errorText: { color: TEXT_SECONDARY, fontSize: 16 },
-  hero: { minHeight: 250 },
+  hero: { minHeight: 300 },
   heroOverlay: { backgroundColor: 'rgba(0,0,0,0.4)', flex: 1 },
   heroTop: { flexDirection: 'row', justifyContent: 'space-between', paddingHorizontal: 16, paddingTop: 8 },
   circleBtn: { width: 36, height: 36, borderRadius: 18, backgroundColor: 'rgba(0,0,0,0.4)', alignItems: 'center', justifyContent: 'center' },
   circleBtnText: { color: '#fff', fontSize: 22, fontWeight: '700', lineHeight: 28 },
   starActive: { color: '#f59e0b' },
-  heroContent: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, paddingVertical: 16, gap: 8 },
-  kitPanel: { flex: 1.2, alignItems: 'center', justifyContent: 'center' },
-  kitImage: {
-    width: 90,
-    height: 115,
-  },
-  kitPlaceholder: {
-    width: 90,
-    height: 115,
-    borderRadius: 6,
-    alignItems: 'center',
-    justifyContent: 'center',
-    opacity: 0.6,
-  },
-  kitImageWrapper: {
-    borderWidth: 1.5,
-    borderColor: '#ADD8E6',
-    borderRadius: 6,
-    padding: 2,
-  },
+  heroContent: { flexDirection: 'row', alignItems: 'flex-end', paddingHorizontal: 8, paddingBottom: 20, paddingTop: 8, gap: 4 },
+  kitPanel: { flex: 1.3, alignItems: 'center', justifyContent: 'flex-end' },
+  kitImage: { width: 120, height: 150 },
+  kitPlaceholder: { width: 120, height: 150, borderRadius: 8, alignItems: 'center', justifyContent: 'center', opacity: 0.6 },
   kitPlaceholderText: { color: '#fff', fontSize: 11, fontWeight: '600' },
-  heroCentre: { flex: 2, alignItems: 'center', gap: 6 },
-  clubName: { color: 'rgba(255,255,255,0.7)', fontSize: 12, fontWeight: '600' },
-  teamName: { color: '#fff', fontSize: 16, fontWeight: '800', textAlign: 'center' },
-  agePill: { paddingHorizontal: 10, paddingVertical: 3, borderRadius: 10, backgroundColor: 'rgba(255,255,255,0.2)' },
-  agePillText: { color: '#fff', fontSize: 11, fontWeight: '700' },
+  heroCentre: { flex: 1.4, alignItems: 'center', gap: 4, paddingBottom: 8 },
+  clubName: { color: 'rgba(255,255,255,0.7)', fontSize: 12, fontWeight: '600', textAlign: 'center' },
+  teamName: { color: '#fff', fontSize: 17, fontWeight: '800', textAlign: 'center' },
+  agePill: { paddingHorizontal: 14, paddingVertical: 4, borderRadius: 14, borderWidth: 1, borderColor: 'rgba(255,255,255,0.4)', backgroundColor: 'transparent' },
+  agePillText: { color: '#fff', fontSize: 12, fontWeight: '700' },
   tabBar: { flexDirection: 'row', backgroundColor: CARD_BG, borderBottomWidth: 1, borderBottomColor: BORDER_COLOR, position: 'relative' },
   tabItem: { flex: 1, paddingVertical: 14, alignItems: 'center' },
   tabLabel: { color: TEXT_SECONDARY, fontSize: 13, fontWeight: '600' },
@@ -562,12 +568,14 @@ const styles = StyleSheet.create({
   overviewTab: { padding: 16, gap: 16 },
   overviewSection: { gap: 8 },
   overviewSectionTitle: { color: TEXT_SECONDARY, fontSize: 11, fontWeight: '700', letterSpacing: 1, textTransform: 'uppercase' },
+  sectionHeaderRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  allResultsLink: { color: LIVE_GREEN, fontSize: 13, fontWeight: '600' },
   last5Row: { gap: 8, paddingVertical: 4 },
-  last5Card: { backgroundColor: CARD_BG, borderRadius: 12, borderWidth: 1, borderColor: BORDER_COLOR, padding: 12, alignItems: 'center', gap: 6, width: 80 },
-  last5Result: { width: 28, height: 28, borderRadius: 14, alignItems: 'center', justifyContent: 'center' },
-  last5ResultText: { color: '#fff', fontSize: 13, fontWeight: '800' },
-  last5Score: { color: TEXT_PRIMARY, fontSize: 13, fontWeight: '700' },
-  last5Date: { color: TEXT_SECONDARY, fontSize: 10 },
+  last5Card: { backgroundColor: CARD_BG, borderRadius: 12, borderWidth: 1, borderColor: BORDER_COLOR, padding: 10, alignItems: 'center', gap: 6, width: 100, overflow: 'hidden' },
+  last5Badges: { flexDirection: 'row', gap: 4, alignItems: 'center' },
+  last5Score: { color: TEXT_PRIMARY, fontSize: 15, fontWeight: '800' },
+  last5Date: { color: TEXT_SECONDARY, fontSize: 11 },
+  last5Bar: { position: 'absolute', bottom: 0, left: 0, right: 0, height: 4 },
   statsGrid: { flexDirection: 'row', gap: 8 },
   statCard: { flex: 1, backgroundColor: CARD_BG, borderRadius: 10, borderWidth: 1, borderColor: BORDER_COLOR, padding: 12, alignItems: 'center', gap: 4 },
   statValue: { color: TEXT_PRIMARY, fontSize: 20, fontWeight: '800' },
