@@ -283,14 +283,25 @@ export default function TeamProfileScreen() {
         </View>
         {sectionPlayers.map(p => (
           <TouchableOpacity key={p.id} style={styles.playerRow} onPress={() => handlePlayerPress(p.id)}>
+            {/* Photo or initials */}
+            {p.photo_url ? (
+              <Image
+                source={{ uri: p.photo_url }}
+                style={styles.playerPhoto}
+                resizeMode="cover"
+              />
+            ) : (
+              <View style={styles.playerInitials}>
+                <Text style={styles.playerInitialsText}>
+                  {(p.first_name[0] + p.last_name[0]).toUpperCase()}
+                </Text>
+              </View>
+            )}
+            {/* Jersey number badge */}
             <View style={styles.jerseyBadge}>
               <Text style={styles.jerseyNum}>{p.jersey_number ?? '—'}</Text>
             </View>
-            <View style={styles.playerInitials}>
-              <Text style={styles.playerInitialsText}>
-                {(p.first_name[0] + p.last_name[0]).toUpperCase()}
-              </Text>
-            </View>
+            {/* Name + position */}
             <View style={styles.playerInfo}>
               <Text style={styles.playerName}>{p.first_name} {p.last_name}</Text>
               {p.position && <Text style={styles.playerPos}>{p.position}</Text>}
@@ -588,17 +599,61 @@ const styles = StyleSheet.create({
   filterPillActive: { backgroundColor: BRAND_GREEN, borderColor: BRAND_GREEN },
   filterText: { color: TEXT_SECONDARY, fontSize: 13, fontWeight: '600' },
   filterTextActive: { color: '#fff' },
-  squadTab: {},
-  squadSectionHeader: { paddingHorizontal: 16, paddingVertical: 8, backgroundColor: DARK_BG, borderBottomWidth: 1, borderBottomColor: BORDER_COLOR },
-  squadSectionTitle: { color: TEXT_SECONDARY, fontSize: 11, fontWeight: '700', letterSpacing: 1, textTransform: 'uppercase' },
-  playerRow: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: BORDER_COLOR, gap: 10 },
-  jerseyBadge: { width: 28, height: 28, borderRadius: 6, backgroundColor: BRAND_GREEN, alignItems: 'center', justifyContent: 'center' },
-  jerseyNum: { color: '#fff', fontSize: 12, fontWeight: '800' },
-  playerInitials: { width: 36, height: 36, borderRadius: 18, backgroundColor: CARD_BG, borderWidth: 1, borderColor: BORDER_COLOR, alignItems: 'center', justifyContent: 'center' },
-  playerInitialsText: { color: TEXT_PRIMARY, fontSize: 12, fontWeight: '700' },
+  squadTab: { paddingBottom: 120 },
+  squadSectionHeader: {
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    backgroundColor: '#111',
+  },
+  squadSectionTitle: {
+    color: TEXT_PRIMARY,
+    fontSize: 15,
+    fontWeight: '700',
+  },
+  playerRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: BORDER_COLOR,
+    gap: 14,
+  },
+  playerPhoto: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: CARD_BG,
+  },
+  playerInitials: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: CARD_BG,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  playerInitialsText: {
+    color: TEXT_SECONDARY,
+    fontSize: 18,
+    fontWeight: '700',
+  },
+  jerseyBadge: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: '#1e1e1e',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  jerseyNum: {
+    color: TEXT_PRIMARY,
+    fontSize: 13,
+    fontWeight: '700',
+  },
   playerInfo: { flex: 1 },
-  playerName: { color: TEXT_PRIMARY, fontSize: 14, fontWeight: '600' },
-  playerPos: { color: TEXT_SECONDARY, fontSize: 12, marginTop: 2 },
+  playerName: { color: TEXT_PRIMARY, fontSize: 16, fontWeight: '700' },
+  playerPos: { color: TEXT_SECONDARY, fontSize: 13, marginTop: 2 },
   empty: { alignItems: 'center', paddingVertical: 60 },
   emptyText: { color: TEXT_SECONDARY, fontSize: 15 },
 });
