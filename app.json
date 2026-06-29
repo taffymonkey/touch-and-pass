@@ -1,13 +1,13 @@
 {
   "expo": {
-    "name": "Pitchside",
-    "slug": "pitchside",
+    "name": "Fifty22",
+    "slug": "fifty22",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/images/4b495c8d-303a-40bf-a74a-d3725f478b34-2026-05-03_1777818414969.png",
+    "icon": "./assets/images/fifty22-light-1024x1024.png",
     "userInterfaceStyle": "automatic",
     "splash": {
-      "image": "./assets/images/4b495c8d-303a-40bf-a74a-d3725f478b34-2026-05-03_1777818414969.png",
+      "image": "./assets/images/fifty22-light-1024x1024.png",
       "resizeMode": "contain",
       "backgroundColor": "#FFFFFF"
     },
@@ -20,7 +20,7 @@
     },
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "./assets/images/4b495c8d-303a-40bf-a74a-d3725f478b34-2026-05-03_1777818414969.png",
+        "foregroundImage": "./assets/images/fifty22-light-1024x1024.png",
         "backgroundColor": "#FFFFFF"
       },
       "package": "com.placeholder.app"
@@ -35,7 +35,7 @@
       "expo-web-browser",
       "expo-secure-store"
     ],
-    "scheme": "pitchside",
+    "scheme": "fifty22",
     "experiments": {
       "typedRoutes": true
     },
