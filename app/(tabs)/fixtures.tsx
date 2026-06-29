@@ -3,171 +3,213 @@ import {
   View,
   Text,
   StyleSheet,
-  SectionList,
-  TouchableOpacity,
   ScrollView,
   RefreshControl,
+  TouchableOpacity,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { supabase } from '@/app/integrations/supabase/client';
+import { useAuth } from '@/contexts/AuthContext';
 import FixtureRow, { FixtureLite } from '@/components/rugby/FixtureRow';
-import CompetitionHeader from '@/components/rugby/CompetitionHeader';
+import TeamBadge from '@/components/rugby/TeamBadge';
 import SkeletonLoader from '@/components/rugby/SkeletonLoader';
 import {
   DARK_BG, CARD_BG, BORDER_COLOR, TEXT_PRIMARY, TEXT_SECONDARY, BRAND_GREEN,
 } from '@/constants/Colors';
 
-type FilterType = 'upcoming' | 'all' | 'completed';
-
-const FILTERS: { key: FilterType; label: string }[] = [
-  { key: 'upcoming', label: 'Upcoming' },
-  { key: 'all', label: 'All' },
-  { key: 'completed', label: 'Completed' },
-];
-
-const MONTH_NAMES = [
-  'January', 'February', 'March', 'April', 'May', 'June',
-  'July', 'August', 'September', 'October', 'November', 'December',
-];
-
-function getMonthKey(dateStr: string): string {
-  const d = new Date(dateStr);
-  return `${MONTH_NAMES[d.getMonth()]} ${d.getFullYear()}`;
+interface FavouriteTeam {
+  id: string;
+  name: string;
+  primary_color: string | null;
+  logo_url: string | null;
 }
 
-interface Section {
-  title: string;
-  data: FixtureLite[];
+interface FavouriteEntry {
+  id: string;
+  team_id: string;
+  team: FavouriteTeam;
 }
 
-export default function FixturesScreen() {
+interface TeamWithFixtures {
+  team: FavouriteTeam;
+  fixtures: FixtureLite[];
+}
+
+export default function FavouritesScreen() {
   const router = useRouter();
-  const [filter, setFilter] = useState<FilterType>('upcoming');
-  const [fixtures, setFixtures] = useState<FixtureLite[]>([]);
+  const { user } = useAuth();
+  const [data, setData] = useState<TeamWithFixtures[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
 
-  const fetchFixtures = useCallback(async () => {
-    console.log('[Fixtures] Fetching all fixtures');
-    const { data, error } = await supabase
-      .from('fixtures')
-      .select(`
-        *,
-        home_team:teams!fixtures_home_team_id_fkey(id, name, primary_color, logo_url),
-        away_team:teams!fixtures_away_team_id_fkey(id, name, primary_color, logo_url),
-        competition:competitions(id, name),
-        match_events(id, event_type, owning_team_id)
-      `)
-      .order('match_date', { ascending: true });
+  const fetchFavourites = useCallback(async () => {
+    if (!user) return;
+    console.log('[Favourites] Fetching favourites for user:', user.id);
 
-    if (error) {
-      console.log('[Fixtures] Fetch error:', error.message);
-    } else {
-      console.log('[Fixtures] Fetched', data?.length ?? 0, 'fixtures');
+    const { data: favData, error: favError } = await supabase
+      .from('fan_favourites')
+      .select('id, team_id, team:teams(id, name, primary_color, logo_url)')
+      .eq('user_id', user.id);
+
+    if (favError) {
+      console.log('[Favourites] Error fetching fan_favourites:', favError.message);
+      return;
     }
-    return (data ?? []) as FixtureLite[];
-  }, []);
 
-  const loadFixtures = useCallback(async (isRefresh = false) => {
+    const favourites = (favData ?? []) as unknown as FavouriteEntry[];
+    console.log('[Favourites] Found', favourites.length, 'favourite teams');
+
+    const results: TeamWithFixtures[] = await Promise.all(
+      favourites.map(async (fav) => {
+        const teamId = fav.team_id;
+        console.log('[Favourites] Fetching fixtures for team:', teamId);
+
+        const { data: fixtureData, error: fixtureError } = await supabase
+          .from('fixtures')
+          .select(`
+            *,
+            home_team:teams!fixtures_home_team_id_fkey(id, name, primary_color, logo_url),
+            away_team:teams!fixtures_away_team_id_fkey(id, name, primary_color, logo_url),
+            competition:competitions(id, name),
+            match_events(id, event_type, owning_team_id)
+          `)
+          .or(`home_team_id.eq.${teamId},away_team_id.eq.${teamId}`)
+          .in('status', ['upcoming', 'in_progress'])
+          .order('match_date', { ascending: true })
+          .limit(5);
+
+        if (fixtureError) {
+          console.log('[Favourites] Error fetching fixtures for team', teamId, ':', fixtureError.message);
+        } else {
+          console.log('[Favourites] Fetched', fixtureData?.length ?? 0, 'fixtures for team', teamId);
+        }
+
+        return {
+          team: fav.team,
+          fixtures: (fixtureData ?? []) as FixtureLite[],
+        };
+      })
+    );
+
+    setData(results);
+  }, [user]);
+
+  const load = useCallback(async (isRefresh = false) => {
     if (!isRefresh) setLoading(true);
-    const data = await fetchFixtures();
-    setFixtures(data);
+    await fetchFavourites();
     if (!isRefresh) setLoading(false);
     setRefreshing(false);
-  }, [fetchFixtures]);
+  }, [fetchFavourites]);
 
   useEffect(() => {
-    loadFixtures();
-  }, [loadFixtures]);
+    load();
+  }, [load]);
 
   const onRefresh = () => {
+    console.log('[Favourites] Pull-to-refresh triggered');
     setRefreshing(true);
-    loadFixtures(true);
-  };
-
-  const handleFilterPress = (f: FilterType) => {
-    console.log('[Fixtures] Filter changed to:', f);
-    setFilter(f);
+    load(true);
   };
 
   const handleFixturePress = (id: string) => {
-    console.log('[Fixtures] Fixture pressed:', id);
+    console.log('[Favourites] Fixture pressed:', id);
     router.push(`/match/${id}`);
   };
 
-  const filtered = fixtures.filter(f => {
-    if (filter === 'upcoming') return f.status === 'upcoming' || f.status === 'in_progress';
-    if (filter === 'completed') return f.status === 'completed';
-    return true;
-  });
+  const handleSignInPress = () => {
+    console.log('[Favourites] Sign In button pressed');
+    router.push('/(auth)/sign-in');
+  };
 
-  const sections: Section[] = [];
-  const monthMap = new Map<string, FixtureLite[]>();
-  filtered.forEach(f => {
-    const key = getMonthKey(f.match_date);
-    if (!monthMap.has(key)) monthMap.set(key, []);
-    monthMap.get(key)!.push(f);
-  });
-  monthMap.forEach((data, title) => sections.push({ title, data }));
+  // Not logged in
+  if (!user) {
+    return (
+      <SafeAreaView style={styles.safe} edges={['top']}>
+        <View style={styles.header}>
+          <Text style={styles.headerTitle}>Favourites</Text>
+        </View>
+        <View style={styles.centred}>
+          <Text style={styles.guestText}>
+            Sign in to save your favourite teams and see their upcoming fixtures
+          </Text>
+          <TouchableOpacity style={styles.signInButton} onPress={handleSignInPress}>
+            <Text style={styles.signInButtonText}>Sign In</Text>
+          </TouchableOpacity>
+        </View>
+      </SafeAreaView>
+    );
+  }
+
+  // Loading skeleton
+  if (loading) {
+    return (
+      <SafeAreaView style={styles.safe} edges={['top']}>
+        <View style={styles.header}>
+          <Text style={styles.headerTitle}>Favourites</Text>
+        </View>
+        <View style={styles.skeletonContainer}>
+          {[1, 2, 3].map(i => (
+            <View key={i} style={styles.skeletonSection}>
+              <SkeletonLoader width={160} height={20} borderRadius={6} style={styles.skeletonTeamName} />
+              {[1, 2].map(j => (
+                <SkeletonLoader key={j} width="100%" height={72} borderRadius={12} style={styles.skeletonItem} />
+              ))}
+            </View>
+          ))}
+        </View>
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView style={styles.safe} edges={['top']}>
       <View style={styles.header}>
-        <Text style={styles.headerTitle}>Fixtures</Text>
+        <Text style={styles.headerTitle}>Favourites</Text>
       </View>
 
-      {/* Filter pills */}
       <ScrollView
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        style={styles.filterStrip}
-        contentContainerStyle={styles.filterContent}
+        contentContainerStyle={styles.listContent}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={BRAND_GREEN} />
+        }
       >
-        {FILTERS.map(f => (
-          <TouchableOpacity
-            key={f.key}
-            style={[styles.filterPill, filter === f.key && styles.filterPillActive]}
-            onPress={() => handleFilterPress(f.key)}
-          >
-            <Text style={[styles.filterText, filter === f.key && styles.filterTextActive]}>
-              {f.label}
+        {data.length === 0 ? (
+          <View style={styles.centredInline}>
+            <Text style={styles.emptyText}>
+              No favourite teams yet — add some from the Teams tab
             </Text>
-          </TouchableOpacity>
-        ))}
-      </ScrollView>
+          </View>
+        ) : (
+          data.map(({ team, fixtures }) => (
+            <View key={team.id} style={styles.teamSection}>
+              {/* Team header */}
+              <View style={styles.teamHeader}>
+                <TeamBadge
+                  logoUrl={team.logo_url}
+                  name={team.name}
+                  primaryColor={team.primary_color}
+                  size={32}
+                />
+                <Text style={styles.teamName}>{team.name}</Text>
+              </View>
 
-      {loading ? (
-        <View style={styles.skeletonContainer}>
-          {[1, 2, 3, 4, 5].map(i => (
-            <SkeletonLoader key={i} width="100%" height={72} borderRadius={12} style={styles.skeletonItem} />
-          ))}
-        </View>
-      ) : (
-        <SectionList
-          sections={sections}
-          keyExtractor={item => item.id}
-          renderItem={({ item }) => (
-            <FixtureRow
-              fixture={item}
-              onPress={() => handleFixturePress(item.id)}
-            />
-          )}
-          renderSectionHeader={({ section }) => (
-            <CompetitionHeader name={section.title} />
-          )}
-          ListEmptyComponent={
-            <View style={styles.empty}>
-              <Text style={styles.emptyText}>No {filter} fixtures</Text>
+              {/* Fixtures */}
+              {fixtures.length === 0 ? (
+                <Text style={styles.noFixturesText}>No upcoming fixtures</Text>
+              ) : (
+                fixtures.map(fixture => (
+                  <FixtureRow
+                    key={fixture.id}
+                    fixture={fixture}
+                    onPress={() => handleFixturePress(fixture.id)}
+                  />
+                ))
+              )}
             </View>
-          }
-          contentContainerStyle={styles.listContent}
-          refreshControl={
-            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={BRAND_GREEN} />
-          }
-          stickySectionHeadersEnabled={false}
-        />
-      )}
+          ))
+        )}
+      </ScrollView>
     </SafeAreaView>
   );
 }
@@ -187,39 +229,44 @@ const styles = StyleSheet.create({
     fontWeight: '800',
     letterSpacing: -0.5,
   },
-  filterStrip: {
-    flexGrow: 0,
-    borderBottomWidth: 1,
-    borderBottomColor: BORDER_COLOR,
+  centred: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 32,
+    gap: 20,
   },
-  filterContent: {
-    paddingHorizontal: 16,
-    paddingVertical: 10,
-    gap: 8,
+  centredInline: {
+    alignItems: 'center',
+    paddingVertical: 60,
+    paddingHorizontal: 32,
   },
-  filterPill: {
-    paddingHorizontal: 16,
-    paddingVertical: 7,
-    borderRadius: 20,
-    borderWidth: 1,
-    borderColor: BORDER_COLOR,
-    backgroundColor: CARD_BG,
-  },
-  filterPillActive: {
-    backgroundColor: BRAND_GREEN,
-    borderColor: BRAND_GREEN,
-  },
-  filterText: {
+  guestText: {
     color: TEXT_SECONDARY,
-    fontSize: 13,
-    fontWeight: '600',
+    fontSize: 15,
+    textAlign: 'center',
+    lineHeight: 22,
   },
-  filterTextActive: {
+  signInButton: {
+    backgroundColor: BRAND_GREEN,
+    paddingHorizontal: 32,
+    paddingVertical: 12,
+    borderRadius: 24,
+  },
+  signInButtonText: {
     color: '#fff',
+    fontSize: 15,
+    fontWeight: '700',
   },
   skeletonContainer: {
     padding: 16,
+    gap: 24,
+  },
+  skeletonSection: {
     gap: 8,
+  },
+  skeletonTeamName: {
+    marginBottom: 4,
   },
   skeletonItem: {
     marginBottom: 4,
@@ -227,12 +274,34 @@ const styles = StyleSheet.create({
   listContent: {
     paddingBottom: 120,
   },
-  empty: {
+  teamSection: {
+    marginBottom: 24,
+    paddingHorizontal: 16,
+  },
+  teamHeader: {
+    flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: 60,
+    gap: 10,
+    paddingVertical: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: BORDER_COLOR,
+    marginBottom: 8,
+  },
+  teamName: {
+    color: TEXT_PRIMARY,
+    fontSize: 16,
+    fontWeight: '700',
+  },
+  noFixturesText: {
+    color: TEXT_SECONDARY,
+    fontSize: 13,
+    paddingVertical: 10,
+    paddingLeft: 4,
   },
   emptyText: {
     color: TEXT_SECONDARY,
     fontSize: 15,
+    textAlign: 'center',
+    lineHeight: 22,
   },
 });

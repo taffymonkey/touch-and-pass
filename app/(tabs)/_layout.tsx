@@ -6,7 +6,7 @@ import { DARK_BG } from '@/constants/Colors';
 
 const TABS: TabBarItem[] = [
   { name: 'home', route: '/(tabs)/(home)', icon: 'sports-rugby', label: 'Scores' },
-  { name: 'fixtures', route: '/(tabs)/fixtures', icon: 'calendar-today', label: 'Fixtures' },
+  { name: 'fixtures', route: '/(tabs)/fixtures', icon: 'favorite', label: 'Favourites' },
   { name: 'teams', route: '/(tabs)/teams', icon: 'groups', label: 'Teams' },
   { name: 'account', route: '/(tabs)/account', icon: 'person', label: 'Account' },
 ];
