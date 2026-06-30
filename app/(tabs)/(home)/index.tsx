@@ -111,8 +111,9 @@ export default function ScoresScreen() {
   useEffect(() => {
     const dateStr = toDateString(selectedDate);
     console.log('[Scores] Setting up realtime subscription for:', dateStr);
+    const channelName = `fixtures-${dateStr}-${Date.now()}`;
     const channel = supabase
-      .channel(`fixtures-${dateStr}`)
+      .channel(channelName)
       .on('postgres_changes', { event: '*', schema: 'public', table: 'fixtures' }, () => {
         console.log('[Scores] Realtime fixture change received, refetching');
         loadFixtures(selectedDate, true);
