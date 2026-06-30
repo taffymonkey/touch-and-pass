@@ -28,7 +28,7 @@ interface FavouriteTeam {
 
 interface FavouriteEntry {
   id: string;
-  team_id: string;
+  team_id: string | null;
   team: FavouriteTeam;
 }
 
@@ -61,9 +61,13 @@ export default function FavouritesScreen() {
     const favourites = (favData ?? []) as unknown as FavouriteEntry[];
     console.log('[Favourites] Found', favourites.length, 'favourite teams');
 
-    const results: TeamWithFixtures[] = await Promise.all(
+    const allResults = await Promise.all(
       favourites.map(async (fav) => {
-        const teamId = fav.team_id;
+        const teamId = fav.team?.id ?? fav.team_id;
+        if (!teamId) {
+          console.warn('[Favourites] Skipping favourite with null team id');
+          return null;
+        }
         console.log('[Favourites] Fetching fixtures for team:', teamId);
 
         const { data: fixtureData, error: fixtureError } = await supabase
@@ -92,6 +96,7 @@ export default function FavouritesScreen() {
         };
       })
     );
+    const results: TeamWithFixtures[] = allResults.filter((r): r is TeamWithFixtures => r !== null);
 
     setData(results);
   }, [user]);
