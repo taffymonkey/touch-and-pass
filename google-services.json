@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "965884502436",
+    "project_id": "touch-and-pass",
+    "storage_bucket": "touch-and-pass.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:965884502436:android:6f165a899e0f02113e2131",
+        "android_client_info": {
+          "package_name": "com.touchandpass.app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyA1-97htFStf3-Ve7aauuImMFAtfRttx5o"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
