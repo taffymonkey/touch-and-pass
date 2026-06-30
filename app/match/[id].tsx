@@ -519,7 +519,7 @@ export default function MatchDetailScreen() {
                 const iconSource = (() => {
                   switch (event.event_type) {
                     case 'try': return require('@/assets/images/854cfd33-c75a-4cca-82f8-e76ea26fe874.jpeg');
-                    case 'conversion': return require('@/assets/images/3169e311-8546-4438-aec1-eafe2047abc1.png');
+                    case 'conversion': return require('@/assets/images/c42c46e0-72be-4125-90c9-0e449238047a.png');
                     case 'penalty': return require('@/assets/images/c9c5d1ff-e729-47e9-900b-61e244cc4ec2.jpeg');
                     case 'drop_goal': return require('@/assets/images/c1333a4b-42d6-465a-9cfa-a2ac9c8e4819.jpeg');
                     case 'substitution': return require('@/assets/images/334a68a1-38f0-436c-88ca-a56e5f3f6609.jpeg');
@@ -531,7 +531,12 @@ export default function MatchDetailScreen() {
 
                 const iconCircle = (
                   <View style={styles.tlIconCircle}>
-                    <Image source={iconSource} style={styles.tlIconImage} resizeMode="contain" />
+                    <Image
+                      source={iconSource}
+                      style={styles.tlIconImage}
+                      resizeMode="contain"
+                      tintColor={event.event_type === 'conversion' ? '#ffffff' : undefined}
+                    />
                   </View>
                 );
 
