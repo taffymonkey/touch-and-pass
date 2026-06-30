@@ -518,7 +518,7 @@ export default function MatchDetailScreen() {
 
                 const iconSource = (() => {
                   switch (event.event_type) {
-                    case 'try': return require('@/assets/images/9bb7166f-9f6e-4a95-acdc-e3128ec52383.jpeg');
+                    case 'try': return require('@/assets/images/854cfd33-c75a-4cca-82f8-e76ea26fe874.jpeg');
                     case 'conversion': return require('@/assets/images/3169e311-8546-4438-aec1-eafe2047abc1.png');
                     case 'penalty': return require('@/assets/images/e1f57668-e9fe-4e1c-9621-cc483572ff3b.jpeg');
                     case 'drop_goal': return require('@/assets/images/e1f57668-e9fe-4e1c-9621-cc483572ff3b.jpeg');
@@ -855,18 +855,16 @@ const styles = StyleSheet.create({
     width: 44,
     height: 44,
     borderRadius: 22,
-    backgroundColor: '#1e1e1e',
-    borderWidth: 1,
-    borderColor: '#2a2a2a',
+    backgroundColor: 'transparent',
     alignItems: 'center',
     justifyContent: 'center',
     overflow: 'hidden',
     zIndex: 2,
   },
   tlIconImage: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
+    width: 44,
+    height: 44,
+    borderRadius: 22,
   },
   tlTextBlockHome: {
     width: '50%',
