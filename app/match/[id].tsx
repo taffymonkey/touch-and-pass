@@ -529,11 +529,15 @@ export default function MatchDetailScreen() {
                   }
                 })();
 
+                const isTry = event.event_type === 'try';
+                const iconSize = isTry ? 22 : 26;
+                const iconOffset = isTry ? -11 : -13;
+
                 const iconCircle = (
-                  <View style={styles.tlIconCircle}>
+                  <View style={[styles.tlIconCircle, { width: iconSize, height: iconSize, borderRadius: iconSize / 2, marginLeft: iconOffset }]}>
                     <Image
                       source={iconSource}
-                      style={styles.tlIconImage}
+                      style={[styles.tlIconImage, { width: iconSize, height: iconSize, borderRadius: iconSize / 2 }]}
                       resizeMode="contain"
                       tintColor={event.event_type === 'conversion' ? '#ffffff' : undefined}
                     />
