@@ -37,10 +37,20 @@ interface TeamWithFixtures {
   fixtures: FixtureLite[];
 }
 
+interface FavouritePlayer {
+  id: string;
+  first_name: string;
+  last_name: string;
+  position: string | null;
+  photo_url: string | null;
+  primaryTeam: FavouriteTeam | null;
+}
+
 export default function FavouritesScreen() {
   const router = useRouter();
   const { user } = useAuth();
-  const [data, setData] = useState<TeamWithFixtures[]>([]);
+  const [teamData, setTeamData] = useState<TeamWithFixtures[]>([]);
+  const [playerData, setPlayerData] = useState<FavouritePlayer[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
 
@@ -48,20 +58,32 @@ export default function FavouritesScreen() {
     if (!user) return;
     console.log('[Favourites] Fetching favourites for user:', user.id);
 
-    const { data: favData, error: favError } = await supabase
-      .from('fan_favourites')
-      .select('id, team_id, team:teams(id, name, primary_color, logo_url, club:clubs(logo_url, name))')
-      .eq('user_id', user.id);
+    // Fetch team favourites and player favourites in parallel
+    const [teamFavResult, playerFavResult] = await Promise.all([
+      supabase
+        .from('fan_favourites')
+        .select('id, team_id, team:teams(id, name, primary_color, logo_url, club:clubs(logo_url, name))')
+        .eq('user_id', user.id)
+        .eq('entity_type', 'team'),
+      supabase
+        .from('fan_favourites')
+        .select('id, entity_id')
+        .eq('user_id', user.id)
+        .eq('entity_type', 'player'),
+    ]);
 
-    if (favError) {
-      console.log('[Favourites] Error fetching fan_favourites:', favError.message);
-      return;
+    if (teamFavResult.error) {
+      console.log('[Favourites] Error fetching team favourites:', teamFavResult.error.message);
+    }
+    if (playerFavResult.error) {
+      console.log('[Favourites] Error fetching player favourites:', playerFavResult.error.message);
     }
 
-    const favourites = (favData ?? []) as unknown as FavouriteEntry[];
+    // --- Teams ---
+    const favourites = (teamFavResult.data ?? []) as unknown as FavouriteEntry[];
     console.log('[Favourites] Found', favourites.length, 'favourite teams');
 
-    const allResults = await Promise.all(
+    const teamResults = await Promise.all(
       favourites.map(async (fav) => {
         const teamId = fav.team?.id ?? fav.team_id;
         if (!teamId) {
@@ -96,9 +118,56 @@ export default function FavouritesScreen() {
         };
       })
     );
-    const results: TeamWithFixtures[] = allResults.filter((r): r is TeamWithFixtures => r !== null);
+    const resolvedTeams: TeamWithFixtures[] = teamResults.filter((r): r is TeamWithFixtures => r !== null);
+    setTeamData(resolvedTeams);
 
-    setData(results);
+    // --- Players ---
+    const playerFavRows = (playerFavResult.data ?? []) as { id: string; entity_id: string | null }[];
+    console.log('[Favourites] Found', playerFavRows.length, 'favourite players');
+
+    const playerResults = await Promise.all(
+      playerFavRows.map(async (row) => {
+        const playerId = row.entity_id;
+        if (!playerId) {
+          console.warn('[Favourites] Skipping player favourite with null entity_id');
+          return null;
+        }
+        console.log('[Favourites] Fetching player details for:', playerId);
+
+        const { data: playerRaw, error: playerError } = await supabase
+          .from('public_players')
+          .select(`
+            id, first_name, last_name, position, photo_url,
+            player_team_registrations(
+              is_primary,
+              team:teams(id, name, primary_color, logo_url, club:clubs(logo_url, name))
+            )
+          `)
+          .eq('id', playerId)
+          .single();
+
+        if (playerError) {
+          console.log('[Favourites] Error fetching player', playerId, ':', playerError.message);
+          return null;
+        }
+
+        const registrations = (playerRaw as any)?.player_team_registrations ?? [];
+        const primaryReg = registrations.find((r: any) => r.is_primary) ?? registrations[0] ?? null;
+        const primaryTeam: FavouriteTeam | null = primaryReg?.team ?? null;
+
+        return {
+          id: playerRaw.id as string,
+          first_name: playerRaw.first_name as string,
+          last_name: playerRaw.last_name as string,
+          position: (playerRaw.position as string | null) ?? null,
+          photo_url: (playerRaw.photo_url as string | null) ?? null,
+          primaryTeam,
+        } as FavouritePlayer;
+      })
+    );
+    const resolvedPlayers: FavouritePlayer[] = playerResults.filter((r): r is FavouritePlayer => r !== null);
+    console.log('[Favourites] Resolved', resolvedPlayers.length, 'player records');
+    setPlayerData(resolvedPlayers);
   }, [user]);
 
   const load = useCallback(async (isRefresh = false) => {
@@ -128,9 +197,19 @@ export default function FavouritesScreen() {
     router.push(`/team/${teamId}`);
   };
 
+  const handlePlayerPress = (playerId: string) => {
+    console.log('[Favourites] Player row pressed:', playerId);
+    router.push(`/player/${playerId}`);
+  };
+
   const handleSignInPress = () => {
     console.log('[Favourites] Sign In button pressed');
     router.push('/(auth)/sign-in');
+  };
+
+  const handleBrowseTeamsPress = () => {
+    console.log('[Favourites] Browse Teams button pressed');
+    router.push('/(tabs)/teams');
   };
 
   // Not logged in
@@ -173,6 +252,10 @@ export default function FavouritesScreen() {
     );
   }
 
+  const hasTeams = teamData.length > 0;
+  const hasPlayers = playerData.length > 0;
+  const isEmpty = !hasTeams && !hasPlayers;
+
   return (
     <SafeAreaView style={styles.safe} edges={['top']}>
       <View style={styles.header}>
@@ -185,50 +268,92 @@ export default function FavouritesScreen() {
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={BRAND_GREEN} />
         }
       >
-        {data.length === 0 ? (
+        {isEmpty ? (
           <View style={styles.centredInline}>
-            <Text style={styles.emptyText}>
-              No favourite teams yet
-            </Text>
+            <Text style={styles.emptyText}>No favourites yet</Text>
             <Text style={styles.emptySubText}>
-              Star a team from the Teams tab to follow their fixtures here
+              Star a team or player to follow them here
             </Text>
-            <TouchableOpacity
-              style={styles.browseButton}
-              onPress={() => router.push('/(tabs)/teams')}
-            >
+            <TouchableOpacity style={styles.browseButton} onPress={handleBrowseTeamsPress}>
               <Text style={styles.browseButtonText}>Browse Teams</Text>
             </TouchableOpacity>
           </View>
         ) : (
-          data.map(({ team, fixtures }) => (
-            <View key={team.id} style={styles.teamSection}>
-              {/* Team header */}
-              <TouchableOpacity style={styles.teamHeader} onPress={() => handleTeamPress(team.id)}>
-                <TeamBadge
-                  logoUrl={team.logo_url ?? team.club?.logo_url}
-                  name={team.name}
-                  primaryColor={team.primary_color}
-                  size={36}
-                />
-                <Text style={styles.teamName}>{team.name}</Text>
-                <Text style={styles.teamChevron}>›</Text>
-              </TouchableOpacity>
+          <>
+            {/* TEAMS SECTION */}
+            {hasTeams && (
+              <>
+                <View style={styles.sectionHeader}>
+                  <Text style={styles.sectionHeaderText}>TEAMS</Text>
+                </View>
+                {teamData.map(({ team, fixtures }) => (
+                  <View key={team.id} style={styles.teamSection}>
+                    <TouchableOpacity style={styles.teamHeader} onPress={() => handleTeamPress(team.id)}>
+                      <TeamBadge
+                        logoUrl={team.logo_url ?? team.club?.logo_url}
+                        name={team.name}
+                        primaryColor={team.primary_color}
+                        size={36}
+                      />
+                      <Text style={styles.teamName}>{team.name}</Text>
+                      <Text style={styles.teamChevron}>›</Text>
+                    </TouchableOpacity>
 
-              {/* Fixtures */}
-              {fixtures.length === 0 ? (
-                <Text style={styles.noFixturesText}>No upcoming fixtures</Text>
-              ) : (
-                fixtures.map(fixture => (
-                  <FixtureRow
-                    key={fixture.id}
-                    fixture={fixture}
-                    onPress={() => handleFixturePress(fixture.id)}
-                  />
-                ))
-              )}
-            </View>
-          ))
+                    {fixtures.length === 0 ? (
+                      <Text style={styles.noFixturesText}>No upcoming fixtures</Text>
+                    ) : (
+                      fixtures.map(fixture => (
+                        <FixtureRow
+                          key={fixture.id}
+                          fixture={fixture}
+                          onPress={() => handleFixturePress(fixture.id)}
+                        />
+                      ))
+                    )}
+                  </View>
+                ))}
+              </>
+            )}
+
+            {/* PLAYERS SECTION */}
+            {hasPlayers && (
+              <>
+                <View style={styles.sectionHeader}>
+                  <Text style={styles.sectionHeaderText}>PLAYERS</Text>
+                </View>
+                <View style={styles.playersSection}>
+                  {playerData.map((player) => {
+                    const fullName = player.first_name + ' ' + player.last_name;
+                    const teamLogoUrl = player.primaryTeam?.logo_url ?? player.primaryTeam?.club?.logo_url ?? null;
+                    const teamName = player.primaryTeam?.name ?? 'Unknown Team';
+                    const teamColor = player.primaryTeam?.primary_color ?? null;
+                    const positionText = player.position ?? '—';
+
+                    return (
+                      <TouchableOpacity
+                        key={player.id}
+                        style={styles.playerRow}
+                        onPress={() => handlePlayerPress(player.id)}
+                        activeOpacity={0.7}
+                      >
+                        <TeamBadge
+                          logoUrl={teamLogoUrl}
+                          name={teamName}
+                          primaryColor={teamColor}
+                          size={40}
+                        />
+                        <View style={styles.playerInfo}>
+                          <Text style={styles.playerName}>{fullName}</Text>
+                          <Text style={styles.playerPosition}>{positionText}</Text>
+                        </View>
+                        <Text style={styles.playerChevron}>›</Text>
+                      </TouchableOpacity>
+                    );
+                  })}
+                </View>
+              </>
+            )}
+          </>
         )}
       </ScrollView>
     </SafeAreaView>
@@ -295,6 +420,21 @@ const styles = StyleSheet.create({
   listContent: {
     paddingBottom: 120,
   },
+  sectionHeader: {
+    paddingHorizontal: 16,
+    paddingTop: 8,
+    paddingBottom: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: BORDER_COLOR,
+    marginBottom: 4,
+  },
+  sectionHeaderText: {
+    color: TEXT_SECONDARY,
+    fontSize: 11,
+    fontWeight: '700',
+    letterSpacing: 1.2,
+    textTransform: 'uppercase',
+  },
   teamSection: {
     marginBottom: 24,
     paddingHorizontal: 16,
@@ -325,8 +465,57 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     lineHeight: 22,
   },
-  emptySubText: { color: TEXT_SECONDARY, fontSize: 13, textAlign: 'center', lineHeight: 20, marginTop: 4 },
-  browseButton: { marginTop: 16, backgroundColor: BRAND_GREEN, paddingHorizontal: 28, paddingVertical: 12, borderRadius: 24 },
-  browseButtonText: { color: '#fff', fontSize: 15, fontWeight: '700' },
-  teamChevron: { color: '#9aab9e', fontSize: 18, marginLeft: 'auto' },
+  emptySubText: {
+    color: TEXT_SECONDARY,
+    fontSize: 13,
+    textAlign: 'center',
+    lineHeight: 20,
+    marginTop: 4,
+  },
+  browseButton: {
+    marginTop: 16,
+    backgroundColor: BRAND_GREEN,
+    paddingHorizontal: 28,
+    paddingVertical: 12,
+    borderRadius: 24,
+  },
+  browseButtonText: {
+    color: '#fff',
+    fontSize: 15,
+    fontWeight: '700',
+  },
+  teamChevron: {
+    color: '#9aab9e',
+    fontSize: 18,
+    marginLeft: 'auto',
+  },
+  playersSection: {
+    paddingHorizontal: 16,
+    marginBottom: 24,
+  },
+  playerRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: BORDER_COLOR,
+  },
+  playerInfo: {
+    flex: 1,
+    gap: 2,
+  },
+  playerName: {
+    color: TEXT_PRIMARY,
+    fontSize: 15,
+    fontWeight: '700',
+  },
+  playerPosition: {
+    color: TEXT_SECONDARY,
+    fontSize: 13,
+  },
+  playerChevron: {
+    color: '#9aab9e',
+    fontSize: 18,
+  },
 });
