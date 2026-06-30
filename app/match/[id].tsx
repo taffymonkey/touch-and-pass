@@ -529,31 +529,6 @@ export default function MatchDetailScreen() {
                   }
                 })();
 
-                const textBlock = (
-                  <View style={isHome ? styles.tlTextBlockHome : styles.tlTextBlockAway}>
-                    <Text style={styles.tlEventType}>{eventTypeUpper}</Text>
-                    {isSubstitution ? (
-                      <>
-                        {playerName !== '' && (
-                          <Text style={styles.tlPlayerName}>
-                            {'↑ '}
-                            {playerName}
-                          </Text>
-                        )}
-                        {replacedName !== '' && (
-                          <Text style={styles.tlPlayerName}>
-                            {'↓ '}
-                            {replacedName}
-                          </Text>
-                        )}
-                      </>
-                    ) : (
-                      playerName !== '' && <Text style={styles.tlPlayerName}>{playerName}</Text>
-                    )}
-                    <Text style={styles.tlMinute}>{minuteStr}</Text>
-                  </View>
-                );
-
                 const iconCircle = (
                   <View style={styles.tlIconCircle}>
                     <Image source={iconSource} style={styles.tlIconImage} resizeMode="contain" />
@@ -562,18 +537,53 @@ export default function MatchDetailScreen() {
 
                 return (
                   <View key={event.id} style={styles.tlEventRow}>
+                    {iconCircle}
                     {isHome ? (
-                      <>
-                        {textBlock}
-                        {iconCircle}
-                        <View style={styles.tlSpacer} />
-                      </>
+                      <View style={styles.tlTextBlockHome}>
+                        <Text style={styles.tlEventType}>{eventTypeUpper}</Text>
+                        {isSubstitution ? (
+                          <>
+                            {playerName !== '' && (
+                              <Text style={styles.tlPlayerName}>
+                                {'↑ '}
+                                {playerName}
+                              </Text>
+                            )}
+                            {replacedName !== '' && (
+                              <Text style={styles.tlPlayerName}>
+                                {'↓ '}
+                                {replacedName}
+                              </Text>
+                            )}
+                          </>
+                        ) : (
+                          playerName !== '' && <Text style={styles.tlPlayerName}>{playerName}</Text>
+                        )}
+                        <Text style={styles.tlMinute}>{minuteStr}</Text>
+                      </View>
                     ) : (
-                      <>
-                        <View style={styles.tlSpacer} />
-                        {iconCircle}
-                        {textBlock}
-                      </>
+                      <View style={styles.tlTextBlockAway}>
+                        <Text style={styles.tlEventType}>{eventTypeUpper}</Text>
+                        {isSubstitution ? (
+                          <>
+                            {playerName !== '' && (
+                              <Text style={styles.tlPlayerName}>
+                                {'↑ '}
+                                {playerName}
+                              </Text>
+                            )}
+                            {replacedName !== '' && (
+                              <Text style={styles.tlPlayerName}>
+                                {'↓ '}
+                                {replacedName}
+                              </Text>
+                            )}
+                          </>
+                        ) : (
+                          playerName !== '' && <Text style={styles.tlPlayerName}>{playerName}</Text>
+                        )}
+                        <Text style={styles.tlMinute}>{minuteStr}</Text>
+                      </View>
                     )}
                   </View>
                 );
@@ -833,11 +843,15 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     paddingVertical: 10,
-    paddingHorizontal: 12,
+    position: 'relative',
+    minHeight: 64,
     zIndex: 1,
   },
   tlSpacer: { flex: 1 },
   tlIconCircle: {
+    position: 'absolute',
+    left: '50%' as unknown as number,
+    marginLeft: -22,
     width: 44,
     height: 44,
     borderRadius: 22,
@@ -847,7 +861,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     overflow: 'hidden',
-    zIndex: 1,
+    zIndex: 2,
   },
   tlIconImage: {
     width: 36,
@@ -855,14 +869,17 @@ const styles = StyleSheet.create({
     borderRadius: 18,
   },
   tlTextBlockHome: {
-    flex: 1,
+    width: '50%',
     alignItems: 'flex-end',
-    paddingRight: 10,
+    paddingRight: 30,
+    paddingLeft: 12,
   },
   tlTextBlockAway: {
-    flex: 1,
+    width: '50%',
     alignItems: 'flex-start',
-    paddingLeft: 10,
+    paddingLeft: 30,
+    paddingRight: 12,
+    marginLeft: '50%' as unknown as number,
   },
   tlEventType: {
     color: '#ffffff',
