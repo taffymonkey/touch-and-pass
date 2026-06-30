@@ -556,7 +556,7 @@ export default function MatchDetailScreen() {
 
                 const iconCircle = (
                   <View style={styles.tlIconCircle}>
-                    <Image source={iconSource} style={styles.tlIconImage} tintColor="#ffffff" resizeMode="contain" />
+                    <Image source={iconSource} style={styles.tlIconImage} resizeMode="contain" />
                   </View>
                 );
 
@@ -846,12 +846,13 @@ const styles = StyleSheet.create({
     borderColor: '#2a2a2a',
     alignItems: 'center',
     justifyContent: 'center',
-    zIndex: 2,
-    flexShrink: 0,
+    overflow: 'hidden',
+    zIndex: 1,
   },
   tlIconImage: {
-    width: 26,
-    height: 26,
+    width: 36,
+    height: 36,
+    borderRadius: 18,
   },
   tlTextBlockHome: {
     flex: 1,
