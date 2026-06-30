@@ -483,45 +483,127 @@ export default function MatchDetailScreen() {
         {/* Live / Timeline tab */}
         {activeTab === 2 && (
           <View style={styles.timelineTab}>
+            {/* Team name header */}
+            <View style={styles.timelineTeamHeader}>
+              <Text style={styles.timelineTeamNameLeft} numberOfLines={1}>
+                {fixture.home_team?.name?.toUpperCase() ?? 'HOME'}
+              </Text>
+              <Text style={styles.timelineTeamNameRight} numberOfLines={1}>
+                {fixture.away_team?.name?.toUpperCase() ?? 'AWAY'}
+              </Text>
+            </View>
+
             {events.length === 0 ? (
               <View style={styles.empty}>
                 <Text style={styles.emptyText}>
                   {isUpcoming ? 'Match has not started yet' : 'No events recorded'}
                 </Text>
               </View>
-            ) : (
-              [...events].reverse().map(event => {
+            ) : (() => {
+              const sortedEvents = [...events].sort((a, b) => (b.minute ?? 0) - (a.minute ?? 0));
+              const secondHalf = sortedEvents.filter(e => (e.minute ?? 0) > 40);
+              const firstHalf = sortedEvents.filter(e => (e.minute ?? 0) <= 40);
+
+              const renderEventRow = (event: MatchEvent) => {
                 const isHome = event.owning_team_id === homeId;
-                const playerName = event.player ? `${event.player.first_name} ${event.player.last_name}` : '';
+                const playerFirst = event.player?.first_name ?? '';
+                const playerLast = event.player?.last_name ?? '';
+                const playerName = (playerFirst || playerLast) ? `${playerFirst} ${playerLast}`.trim() : '';
+                const replacedFirst = event.replaced_by?.first_name ?? '';
+                const replacedLast = event.replaced_by?.last_name ?? '';
+                const replacedName = (replacedFirst || replacedLast) ? `${replacedFirst} ${replacedLast}`.trim() : '';
                 const minuteStr = event.minute != null ? `${event.minute}'` : '';
-                return (
-                  <View key={event.id} style={[styles.eventRow, isHome ? styles.eventRowHome : styles.eventRowAway]}>
-                    {isHome && (
+                const eventTypeUpper = event.event_type.replace(/_/g, ' ').toUpperCase();
+                const isSubstitution = event.event_type === 'substitution';
+
+                const iconSource = (() => {
+                  switch (event.event_type) {
+                    case 'try': return require('@/assets/images/9bb7166f-9f6e-4a95-acdc-e3128ec52383.jpeg');
+                    case 'conversion': return require('@/assets/images/3169e311-8546-4438-aec1-eafe2047abc1.png');
+                    case 'penalty': return require('@/assets/images/e1f57668-e9fe-4e1c-9621-cc483572ff3b.jpeg');
+                    case 'drop_goal': return require('@/assets/images/e1f57668-e9fe-4e1c-9621-cc483572ff3b.jpeg');
+                    case 'substitution': return require('@/assets/images/18f1157f-e74d-4379-9816-9931a2134689.jpeg');
+                    case 'yellow_card': return require('@/assets/images/ca550a3c-9a7d-4850-9f91-c2fead4dc194.jpeg');
+                    case 'red_card': return require('@/assets/images/ca550a3c-9a7d-4850-9f91-c2fead4dc194.jpeg');
+                    default: return require('@/assets/images/9bb7166f-9f6e-4a95-acdc-e3128ec52383.jpeg');
+                  }
+                })();
+
+                const textBlock = (
+                  <View style={isHome ? styles.tlTextBlockHome : styles.tlTextBlockAway}>
+                    <Text style={styles.tlEventType}>{eventTypeUpper}</Text>
+                    {isSubstitution ? (
                       <>
-                        <Text style={styles.eventMinute}>{minuteStr}</Text>
-                        <EventIcon type={event.event_type} size={24} />
-                        <View style={styles.eventInfo}>
-                          <Text style={styles.eventType}>{event.event_type.replace('_', ' ')}</Text>
-                          {playerName !== '' && <Text style={styles.eventPlayer}>{playerName}</Text>}
-                        </View>
-                        <View style={styles.eventSpacer} />
+                        {playerName !== '' && (
+                          <Text style={styles.tlPlayerName}>
+                            {'↑ '}
+                            {playerName}
+                          </Text>
+                        )}
+                        {replacedName !== '' && (
+                          <Text style={styles.tlPlayerName}>
+                            {'↓ '}
+                            {replacedName}
+                          </Text>
+                        )}
                       </>
+                    ) : (
+                      playerName !== '' && <Text style={styles.tlPlayerName}>{playerName}</Text>
                     )}
-                    {!isHome && (
+                    <Text style={styles.tlMinute}>{minuteStr}</Text>
+                  </View>
+                );
+
+                const iconCircle = (
+                  <View style={styles.tlIconCircle}>
+                    <Image source={iconSource} style={styles.tlIconImage} tintColor="#ffffff" resizeMode="contain" />
+                  </View>
+                );
+
+                return (
+                  <View key={event.id} style={styles.tlEventRow}>
+                    {isHome ? (
                       <>
-                        <View style={styles.eventSpacer} />
-                        <View style={styles.eventInfo}>
-                          <Text style={[styles.eventType, styles.eventTypeRight]}>{event.event_type.replace('_', ' ')}</Text>
-                          {playerName !== '' && <Text style={[styles.eventPlayer, styles.eventPlayerRight]}>{playerName}</Text>}
-                        </View>
-                        <EventIcon type={event.event_type} size={24} />
-                        <Text style={[styles.eventMinute, styles.eventMinuteRight]}>{minuteStr}</Text>
+                        {textBlock}
+                        {iconCircle}
+                        <View style={styles.tlSpacer} />
+                      </>
+                    ) : (
+                      <>
+                        <View style={styles.tlSpacer} />
+                        {iconCircle}
+                        {textBlock}
                       </>
                     )}
                   </View>
                 );
-              })
-            )}
+              };
+
+              return (
+                <View style={styles.tlContainer}>
+                  {/* Vertical centre line */}
+                  <View style={styles.tlCentreLine} />
+
+                  {/* FULL TIME divider */}
+                  <View style={styles.tlDivider}>
+                    <View style={styles.tlDividerLine} />
+                    <Text style={styles.tlDividerLabel}>FULL TIME</Text>
+                    <View style={styles.tlDividerLine} />
+                  </View>
+
+                  {secondHalf.map(renderEventRow)}
+
+                  {/* HALF TIME divider */}
+                  <View style={styles.tlDivider}>
+                    <View style={styles.tlDividerLine} />
+                    <Text style={styles.tlDividerLabel}>HALF TIME</Text>
+                    <View style={styles.tlDividerLine} />
+                  </View>
+
+                  {firstHalf.map(renderEventRow)}
+                </View>
+              );
+            })()}
           </View>
         )}
 
@@ -713,7 +795,112 @@ const styles = StyleSheet.create({
   empty: { alignItems: 'center', paddingVertical: 60 },
   emptyText: { color: TEXT_SECONDARY, fontSize: 15 },
   // Timeline tab
-  timelineTab: { padding: 12, gap: 4 },
+  timelineTab: { paddingBottom: 12 },
+  timelineTeamHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+  },
+  timelineTeamNameLeft: {
+    flex: 1,
+    color: '#ffffff',
+    fontSize: 12,
+    fontWeight: '700',
+    textAlign: 'left',
+  },
+  timelineTeamNameRight: {
+    flex: 1,
+    color: '#ffffff',
+    fontSize: 12,
+    fontWeight: '700',
+    textAlign: 'right',
+  },
+  tlContainer: {
+    position: 'relative',
+    paddingHorizontal: 0,
+  },
+  tlCentreLine: {
+    position: 'absolute',
+    width: 1,
+    top: 0,
+    bottom: 0,
+    left: '50%',
+    backgroundColor: '#2a2a2a',
+    zIndex: 0,
+  },
+  tlEventRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 10,
+    paddingHorizontal: 12,
+    zIndex: 1,
+  },
+  tlSpacer: { flex: 1 },
+  tlIconCircle: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: '#1e1e1e',
+    borderWidth: 1,
+    borderColor: '#2a2a2a',
+    alignItems: 'center',
+    justifyContent: 'center',
+    zIndex: 2,
+    flexShrink: 0,
+  },
+  tlIconImage: {
+    width: 26,
+    height: 26,
+  },
+  tlTextBlockHome: {
+    flex: 1,
+    alignItems: 'flex-end',
+    paddingRight: 10,
+  },
+  tlTextBlockAway: {
+    flex: 1,
+    alignItems: 'flex-start',
+    paddingLeft: 10,
+  },
+  tlEventType: {
+    color: '#ffffff',
+    fontSize: 13,
+    fontWeight: '700',
+    textTransform: 'uppercase',
+  },
+  tlPlayerName: {
+    color: '#9aab9e',
+    fontSize: 12,
+    marginTop: 1,
+  },
+  tlMinute: {
+    color: '#4ade80',
+    fontSize: 11,
+    fontWeight: '700',
+    marginTop: 2,
+  },
+  tlDivider: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    zIndex: 1,
+  },
+  tlDividerLine: {
+    flex: 1,
+    height: 1,
+    backgroundColor: '#2a2a2a',
+  },
+  tlDividerLabel: {
+    color: '#9aab9e',
+    fontSize: 10,
+    fontWeight: '700',
+    letterSpacing: 2,
+    textTransform: 'uppercase',
+    marginHorizontal: 10,
+  },
+  // Legacy event styles (kept for any other usage)
   eventRow: { flexDirection: 'row', alignItems: 'center', paddingVertical: 8, gap: 8 },
   eventRowHome: {},
   eventRowAway: {},
