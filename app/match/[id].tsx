@@ -856,10 +856,10 @@ const styles = StyleSheet.create({
   tlIconCircle: {
     position: 'absolute',
     left: '50%' as unknown as number,
-    marginLeft: -22,
-    width: 44,
-    height: 44,
-    borderRadius: 22,
+    marginLeft: -11,
+    width: 22,
+    height: 22,
+    borderRadius: 11,
     backgroundColor: 'transparent',
     alignItems: 'center',
     justifyContent: 'center',
@@ -867,9 +867,9 @@ const styles = StyleSheet.create({
     zIndex: 2,
   },
   tlIconImage: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
+    width: 22,
+    height: 22,
+    borderRadius: 11,
   },
   tlTextBlockHome: {
     width: '50%',
