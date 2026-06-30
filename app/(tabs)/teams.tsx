@@ -159,7 +159,19 @@ export default function TeamsScreen() {
     : null;
 
   // By club sections
-  const clubSections = clubs.map(c => ({ title: c.name, data: [c] }));
+  const clubSections = clubs.map(c => ({
+    title: c.name,
+    data: [{
+      ...c,
+      teams: [...c.teams].sort((a, b) => {
+        const ai = AGE_GROUP_ORDER.indexOf(a.age_group ?? '');
+        const bi = AGE_GROUP_ORDER.indexOf(b.age_group ?? '');
+        const aIdx = ai === -1 ? 999 : ai;
+        const bIdx = bi === -1 ? 999 : bi;
+        return aIdx - bIdx;
+      }),
+    }],
+  }));
 
   // By age group sections
   const ageGroupMap = new Map<string, typeof allTeams>();
