@@ -30,8 +30,8 @@ interface FixtureDetail {
   venue: string | null;
   game_type: string | null;
   is_final: boolean | null;
-  home_team: { id: string; name: string; primary_color: string | null; logo_url: string | null; club?: { logo_url: string | null } | null } | null;
-  away_team: { id: string; name: string; primary_color: string | null; logo_url: string | null; club?: { logo_url: string | null } | null } | null;
+  home_team: { id: string; name: string; primary_color: string | null; logo_url: string | null; club?: { logo_url: string | null; primary_color: string | null } | null } | null;
+  away_team: { id: string; name: string; primary_color: string | null; logo_url: string | null; club?: { logo_url: string | null; primary_color: string | null } | null } | null;
   competition: { id: string; name: string } | null;
 }
 
@@ -133,7 +133,7 @@ export default function MatchDetailScreen() {
     const [fixtureRes, selectionsRes, eventsRes] = await Promise.all([
       supabase
         .from('fixtures')
-        .select(`*, home_team:teams!fixtures_home_team_id_fkey(id, name, primary_color, logo_url, club:clubs(logo_url)), away_team:teams!fixtures_away_team_id_fkey(id, name, primary_color, logo_url, club:clubs(logo_url)), competition:competitions(id, name)`)
+        .select(`*, home_team:teams!fixtures_home_team_id_fkey(id, name, primary_color, logo_url, club:clubs(logo_url, primary_color)), away_team:teams!fixtures_away_team_id_fkey(id, name, primary_color, logo_url, club:clubs(logo_url, primary_color)), competition:competitions(id, name)`)
         .eq('id', id)
         .single(),
       supabase
@@ -244,8 +244,8 @@ export default function MatchDetailScreen() {
   const isCompleted = fixture.status === 'completed';
   const isUpcoming = fixture.status === 'upcoming';
 
-  const homeColor = fixture.home_team?.primary_color ?? BRAND_GREEN;
-  const awayColor = fixture.away_team?.primary_color ?? '#1e3a5f';
+  const homeColor = fixture.home_team?.club?.primary_color ?? fixture.home_team?.primary_color ?? BRAND_GREEN;
+  const awayColor = fixture.away_team?.club?.primary_color ?? fixture.away_team?.primary_color ?? '#1e3a5f';
 
   // Stats
   const countEvents = (teamId: string, type: string) =>
@@ -276,13 +276,12 @@ export default function MatchDetailScreen() {
     <View style={styles.container}>
       {/* Hero Header */}
       <LinearGradient
-        colors={[homeColor, awayColor]}
+        colors={[homeColor, '#0a0a0a', '#0a0a0a', awayColor]}
+        locations={[0, 0.42, 0.58, 1]}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 0 }}
         style={styles.hero}
       >
-        {/* Dark overlay */}
-        <View style={styles.heroOverlay} />
 
         {/* Home watermark logo */}
         {(fixture.home_team?.logo_url ?? fixture.home_team?.club?.logo_url) ? (
@@ -585,17 +584,13 @@ const styles = StyleSheet.create({
   loadingContainer: { flex: 1, backgroundColor: DARK_BG, alignItems: 'center', justifyContent: 'center' },
   errorText: { color: TEXT_SECONDARY, fontSize: 16 },
   hero: { minHeight: 220, position: 'relative', overflow: 'hidden' },
-  heroOverlay: {
-    ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(0,0,0,0.45)',
-  },
   heroWatermarkLeft: {
     position: 'absolute',
     left: -20,
     top: 0,
     bottom: 0,
     width: '55%',
-    opacity: 0.18,
+    opacity: 0.35,
   },
   heroWatermarkRight: {
     position: 'absolute',
@@ -603,7 +598,7 @@ const styles = StyleSheet.create({
     top: 0,
     bottom: 0,
     width: '55%',
-    opacity: 0.18,
+    opacity: 0.35,
   },
   heroSafeArea: { flex: 1 },
   heroTop: {
