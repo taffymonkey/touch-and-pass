@@ -17,6 +17,7 @@ import { supabase } from '@/app/integrations/supabase/client';
 import TeamBadge from '@/components/rugby/TeamBadge';
 import SkeletonLoader from '@/components/rugby/SkeletonLoader';
 import { useAuth } from '@/contexts/AuthContext';
+import { useNotifications } from '@/contexts/NotificationContext';
 import {
   DARK_BG, CARD_BG, BORDER_COLOR, TEXT_PRIMARY, TEXT_SECONDARY, BRAND_GREEN, LIVE_GREEN,
 } from '@/constants/Colors';
@@ -48,6 +49,7 @@ type ViewMode = 'club' | 'age_group';
 export default function TeamsScreen() {
   const router = useRouter();
   const { user } = useAuth();
+  const { sendTag, deleteTag } = useNotifications();
   const [clubs, setClubs] = useState<ClubRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -125,6 +127,7 @@ export default function TeamsScreen() {
         .eq('entity_type', 'team')
         .eq('entity_id', teamId);
       setFavourites(prev => { const n = new Set(prev); n.delete(teamId); return n; });
+      deleteTag(`fav_team_${teamId}`);
       console.log('[Teams] Removed favourite:', teamId);
     } else {
       await supabase
@@ -132,6 +135,7 @@ export default function TeamsScreen() {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         .upsert({ user_id: user.id, entity_type: 'team', entity_id: teamId, team_id: teamId } as any);
       setFavourites(prev => new Set([...prev, teamId]));
+      sendTag(`fav_team_${teamId}`, 'true');
       console.log('[Teams] Added favourite:', teamId);
     }
   };

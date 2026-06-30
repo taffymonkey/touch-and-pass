@@ -20,42 +20,117 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import { useNotifications } from "@/contexts/NotificationContext";
+import {
+  DARK_BG,
+  CARD_BG,
+  BORDER_COLOR,
+  TEXT_PRIMARY,
+  TEXT_SECONDARY,
+  BRAND_GREEN,
+} from "@/constants/Colors";
 
-// Notification categories - customize these for your app
-const NOTIFICATION_CATEGORIES = [
+interface NotificationCategory {
+  key: string;
+  label: string;
+  description: string;
+}
+
+interface NotificationSection {
+  title: string;
+  categories: NotificationCategory[];
+}
+
+const NOTIFICATION_SECTIONS: NotificationSection[] = [
   {
-    key: "updates",
-    label: "App Updates",
-    description: "New features and improvements",
-    defaultEnabled: true,
+    title: "Match Alerts",
+    categories: [
+      {
+        key: "notify_kickoff_reminder",
+        label: "Kick-off Reminder",
+        description: "1 hour before your team plays",
+      },
+      {
+        key: "notify_match_started",
+        label: "Match Started",
+        description: "When your team's match kicks off",
+      },
+      {
+        key: "notify_half_time",
+        label: "Half Time",
+        description: "Half-time score for your team's matches",
+      },
+      {
+        key: "notify_second_half",
+        label: "Second Half Started",
+        description: "When the second half begins",
+      },
+      {
+        key: "notify_full_time",
+        label: "Full Time",
+        description: "Final score when your team's match ends",
+      },
+      {
+        key: "notify_new_fixture",
+        label: "New Fixture",
+        description: "When a new match is scheduled for your team",
+      },
+    ],
   },
   {
-    key: "promotions",
-    label: "Promotions",
-    description: "Special offers and discounts",
-    defaultEnabled: true,
-  },
-  {
-    key: "reminders",
-    label: "Reminders",
-    description: "Activity reminders and tips",
-    defaultEnabled: true,
+    title: "In-Game Events",
+    categories: [
+      {
+        key: "notify_try",
+        label: "Try Scored",
+        description: "Any try in your team's match",
+      },
+      {
+        key: "notify_conversion",
+        label: "Conversion",
+        description: "Any conversion in your team's match",
+      },
+      {
+        key: "notify_penalty",
+        label: "Penalty",
+        description: "Any penalty in your team's match",
+      },
+      {
+        key: "notify_drop_goal",
+        label: "Drop Goal",
+        description: "Any drop goal in your team's match",
+      },
+      {
+        key: "notify_yellow_card",
+        label: "Yellow Card",
+        description: "Any yellow card in your team's match",
+      },
+      {
+        key: "notify_red_card",
+        label: "Red Card",
+        description: "Any red card in your team's match",
+      },
+      {
+        key: "notify_player_milestone",
+        label: "Player Milestone",
+        description: "When a favourite player hits a scoring milestone",
+      },
+    ],
   },
 ];
+
+const ALL_CATEGORIES = NOTIFICATION_SECTIONS.flatMap((s) => s.categories);
 
 export default function NotificationPreferencesScreen() {
   const router = useRouter();
   const { hasPermission, permissionDenied, isWeb, requestPermission, sendTag, deleteTag } =
     useNotifications();
 
-  // Track category toggles locally
   const [categories, setCategories] = useState<Record<string, boolean>>(
-    Object.fromEntries(
-      NOTIFICATION_CATEGORIES.map((cat) => [cat.key, cat.defaultEnabled])
-    )
+    Object.fromEntries(ALL_CATEGORIES.map((cat) => [cat.key, true]))
   );
 
   const handleEnableNotifications = async () => {
+    console.log("[NotificationPreferences] Enable notifications pressed");
     if (permissionDenied) {
       Alert.alert(
         "Notifications Disabled",
@@ -81,12 +156,13 @@ export default function NotificationPreferencesScreen() {
   };
 
   const handleCategoryToggle = (key: string, value: boolean) => {
+    console.log("[NotificationPreferences] Toggle preference:", key, "->", value);
     setCategories((prev) => ({ ...prev, [key]: value }));
 
     if (value) {
-      sendTag(`notify_${key}`, "true");
+      sendTag(key, "true");
     } else {
-      deleteTag(`notify_${key}`);
+      deleteTag(key);
     }
   };
 
@@ -112,69 +188,76 @@ export default function NotificationPreferencesScreen() {
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.back()}>
+        <TouchableOpacity onPress={() => {
+          console.log("[NotificationPreferences] Back pressed");
+          router.back();
+        }}>
           <Text style={styles.backButton}>← Back</Text>
         </TouchableOpacity>
         <Text style={styles.title}>Notifications</Text>
         <View style={{ width: 60 }} />
       </View>
 
-      <ScrollView style={styles.content}>
+      <ScrollView style={styles.content} contentContainerStyle={styles.contentInner}>
         {/* Permission Status */}
-        <View style={styles.section}>
-          <View style={styles.permissionCard}>
-            <View style={styles.permissionHeader}>
-              <Text style={styles.permissionIcon}>
-                {hasPermission ? "🔔" : "🔕"}
+        <View style={styles.permissionCard}>
+          <View style={styles.permissionHeader}>
+            <Text style={styles.permissionIcon}>
+              {hasPermission ? "🔔" : "🔕"}
+            </Text>
+            <View style={styles.permissionTextContainer}>
+              <Text style={styles.permissionTitle}>
+                {hasPermission ? "Notifications Enabled" : "Notifications Disabled"}
               </Text>
-              <View style={styles.permissionTextContainer}>
-                <Text style={styles.permissionTitle}>
-                  {hasPermission
-                    ? "Notifications Enabled"
-                    : "Notifications Disabled"}
-                </Text>
-                <Text style={styles.permissionDescription}>
-                  {hasPermission
-                    ? "You'll receive push notifications"
-                    : "Enable notifications to stay updated"}
-                </Text>
-              </View>
+              <Text style={styles.permissionDescription}>
+                {hasPermission
+                  ? "You'll receive push notifications"
+                  : "Enable notifications to stay updated"}
+              </Text>
             </View>
-            {!hasPermission && (
-              <TouchableOpacity
-                style={styles.enableButton}
-                onPress={handleEnableNotifications}
-              >
-                <Text style={styles.enableButtonText}>Enable Notifications</Text>
-              </TouchableOpacity>
-            )}
           </View>
+          {!hasPermission && (
+            <TouchableOpacity
+              style={styles.enableButton}
+              onPress={handleEnableNotifications}
+            >
+              <Text style={styles.enableButtonText}>Enable Notifications</Text>
+            </TouchableOpacity>
+          )}
         </View>
 
-        {/* Notification Categories */}
-        {hasPermission && (
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Notification Types</Text>
-            {NOTIFICATION_CATEGORIES.map((category) => (
-              <View key={category.key} style={styles.categoryRow}>
-                <View style={styles.categoryText}>
-                  <Text style={styles.categoryLabel}>{category.label}</Text>
-                  <Text style={styles.categoryDescription}>
-                    {category.description}
-                  </Text>
-                </View>
-                <Switch
-                  value={categories[category.key]}
-                  onValueChange={(value) =>
-                    handleCategoryToggle(category.key, value)
-                  }
-                  trackColor={{ false: "#E5E5EA", true: "#34C759" }}
-                  thumbColor="#fff"
-                />
-              </View>
-            ))}
+        {/* Notification Sections */}
+        {hasPermission && NOTIFICATION_SECTIONS.map((section) => (
+          <View key={section.title} style={styles.section}>
+            <Text style={styles.sectionTitle}>{section.title}</Text>
+            <View style={styles.sectionCard}>
+              {section.categories.map((category, index) => {
+                const isLast = index === section.categories.length - 1;
+                return (
+                  <View
+                    key={category.key}
+                    style={[styles.categoryRow, !isLast && styles.categoryRowBorder]}
+                  >
+                    <View style={styles.categoryText}>
+                      <Text style={styles.categoryLabel}>{category.label}</Text>
+                      <Text style={styles.categoryDescription}>
+                        {category.description}
+                      </Text>
+                    </View>
+                    <Switch
+                      value={categories[category.key]}
+                      onValueChange={(value) =>
+                        handleCategoryToggle(category.key, value)
+                      }
+                      trackColor={{ false: BORDER_COLOR, true: BRAND_GREEN }}
+                      thumbColor="#fff"
+                    />
+                  </View>
+                );
+              })}
+            </View>
           </View>
-        )}
+        ))}
       </ScrollView>
     </SafeAreaView>
   );
@@ -183,7 +266,7 @@ export default function NotificationPreferencesScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#F2F2F7",
+    backgroundColor: DARK_BG,
   },
   header: {
     flexDirection: "row",
@@ -191,22 +274,25 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     paddingHorizontal: 16,
     paddingVertical: 12,
-    backgroundColor: "#fff",
     borderBottomWidth: 1,
-    borderBottomColor: "#E5E5EA",
+    borderBottomColor: BORDER_COLOR,
   },
   backButton: {
     fontSize: 16,
-    color: "#007AFF",
+    color: BRAND_GREEN,
     width: 60,
   },
   title: {
     fontSize: 17,
     fontWeight: "600",
-    color: "#000",
+    color: TEXT_PRIMARY,
   },
   content: {
     flex: 1,
+  },
+  contentInner: {
+    padding: 16,
+    paddingBottom: 40,
   },
   centeredContent: {
     flex: 1,
@@ -216,31 +302,16 @@ const styles = StyleSheet.create({
   },
   webMessage: {
     fontSize: 16,
-    color: "#8E8E93",
+    color: TEXT_SECONDARY,
     textAlign: "center",
   },
-  section: {
-    marginTop: 24,
-    marginHorizontal: 16,
-  },
-  sectionTitle: {
-    fontSize: 13,
-    fontWeight: "600",
-    color: "#8E8E93",
-    textTransform: "uppercase",
-    letterSpacing: 0.5,
-    marginBottom: 8,
-    marginLeft: 4,
-  },
   permissionCard: {
-    backgroundColor: "#fff",
+    backgroundColor: CARD_BG,
     borderRadius: 12,
     padding: 16,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 4,
-    elevation: 2,
+    marginBottom: 24,
+    borderWidth: 1,
+    borderColor: BORDER_COLOR,
   },
   permissionHeader: {
     flexDirection: "row",
@@ -256,16 +327,16 @@ const styles = StyleSheet.create({
   permissionTitle: {
     fontSize: 17,
     fontWeight: "600",
-    color: "#000",
+    color: TEXT_PRIMARY,
   },
   permissionDescription: {
     fontSize: 14,
-    color: "#8E8E93",
+    color: TEXT_SECONDARY,
     marginTop: 2,
   },
   enableButton: {
     marginTop: 16,
-    backgroundColor: "#007AFF",
+    backgroundColor: BRAND_GREEN,
     borderRadius: 10,
     paddingVertical: 12,
     alignItems: "center",
@@ -275,27 +346,48 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "600",
   },
+  section: {
+    marginBottom: 24,
+  },
+  sectionTitle: {
+    fontSize: 13,
+    fontWeight: "700",
+    color: TEXT_SECONDARY,
+    textTransform: "uppercase",
+    letterSpacing: 0.8,
+    marginBottom: 8,
+    marginLeft: 4,
+  },
+  sectionCard: {
+    backgroundColor: CARD_BG,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: BORDER_COLOR,
+    overflow: "hidden",
+  },
   categoryRow: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    backgroundColor: "#fff",
-    paddingVertical: 12,
+    paddingVertical: 13,
     paddingHorizontal: 16,
+  },
+  categoryRowBorder: {
     borderBottomWidth: 1,
-    borderBottomColor: "#F2F2F7",
+    borderBottomColor: BORDER_COLOR,
   },
   categoryText: {
     flex: 1,
     marginRight: 12,
   },
   categoryLabel: {
-    fontSize: 16,
-    color: "#000",
+    fontSize: 15,
+    color: TEXT_PRIMARY,
+    fontWeight: "500",
   },
   categoryDescription: {
-    fontSize: 13,
-    color: "#8E8E93",
+    fontSize: 12,
+    color: TEXT_SECONDARY,
     marginTop: 2,
   },
 });

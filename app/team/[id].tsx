@@ -19,6 +19,7 @@ import TeamBadge from '@/components/rugby/TeamBadge';
 import FixtureRow, { FixtureLite } from '@/components/rugby/FixtureRow';
 import CompetitionHeader from '@/components/rugby/CompetitionHeader';
 import { useAuth } from '@/contexts/AuthContext';
+import { useNotifications } from '@/contexts/NotificationContext';
 import {
   DARK_BG, CARD_BG, BORDER_COLOR, TEXT_PRIMARY, TEXT_SECONDARY, BRAND_GREEN, LIVE_GREEN,
 } from '@/constants/Colors';
@@ -92,6 +93,7 @@ export default function TeamProfileScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
   const { user } = useAuth();
+  const { sendTag, deleteTag } = useNotifications();
   const [team, setTeam] = useState<TeamDetail | null>(null);
   const [fixtures, setFixtures] = useState<FixtureLite[]>([]);
   const [players, setPlayers] = useState<PlayerRow[]>([]);
@@ -168,10 +170,14 @@ export default function TeamProfileScreen() {
     if (isFavourite) {
       await supabase.from('fan_favourites').delete().eq('user_id', user.id).eq('entity_type', 'team').eq('entity_id', id!);
       setIsFavourite(false);
+      deleteTag(`fav_team_${id}`);
+      console.log('[Team] Removed favourite tag for team:', id);
     } else {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       await supabase.from('fan_favourites').upsert({ user_id: user.id, entity_type: 'team', entity_id: id!, team_id: id! } as any);
       setIsFavourite(true);
+      sendTag(`fav_team_${id}`, 'true');
+      console.log('[Team] Added favourite tag for team:', id);
     }
   };
 
