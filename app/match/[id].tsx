@@ -523,8 +523,8 @@ export default function MatchDetailScreen() {
                     case 'penalty': return require('@/assets/images/c9c5d1ff-e729-47e9-900b-61e244cc4ec2.jpeg');
                     case 'drop_goal': return require('@/assets/images/c1333a4b-42d6-465a-9cfa-a2ac9c8e4819.jpeg');
                     case 'substitution': return require('@/assets/images/334a68a1-38f0-436c-88ca-a56e5f3f6609.jpeg');
-                    case 'yellow_card': return require('@/assets/images/ca550a3c-9a7d-4850-9f91-c2fead4dc194.jpeg');
-                    case 'red_card': return require('@/assets/images/ca550a3c-9a7d-4850-9f91-c2fead4dc194.jpeg');
+                    case 'yellow_card': return require('@/assets/images/60921a64-c25f-4472-b94d-23ee830a04c9.jpeg');
+                    case 'red_card': return require('@/assets/images/60921a64-c25f-4472-b94d-23ee830a04c9.jpeg');
                     default: return require('@/assets/images/9bb7166f-9f6e-4a95-acdc-e3128ec52383.jpeg');
                   }
                 })();
