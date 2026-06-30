@@ -12,6 +12,7 @@ import { DarkTheme, Theme, ThemeProvider } from '@react-navigation/native';
 import { StatusBar } from 'expo-status-bar';
 import { WidgetProvider } from '@/contexts/WidgetContext';
 import { AuthProvider } from '@/contexts/AuthContext';
+import { NotificationProvider } from "@/contexts/NotificationContext";
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { DARK_BG, CARD_BG, BORDER_COLOR, TEXT_PRIMARY, BRAND_GREEN } from '@/constants/Colors';
 
@@ -65,6 +66,7 @@ export default function RootLayout() {
       <ThemeProvider value={RugbyDarkTheme}>
         <SafeAreaProvider>
           <AuthProvider>
+        <NotificationProvider>
             <WidgetProvider>
               <GestureHandlerRootView>
                 <Stack>
@@ -73,11 +75,13 @@ export default function RootLayout() {
                   <Stack.Screen name="match/[id]" options={{ headerShown: false }} />
                   <Stack.Screen name="team/[id]" options={{ headerShown: false }} />
                   <Stack.Screen name="player/[id]" options={{ headerShown: false }} />
+                  <Stack.Screen name="notification-preferences" options={{ title: 'Notification Preferences', headerShown: true }} />
                 </Stack>
                 <SystemBars style="light" />
               </GestureHandlerRootView>
             </WidgetProvider>
-          </AuthProvider>
+          </NotificationProvider>
+        </AuthProvider>
         </SafeAreaProvider>
       </ThemeProvider>
     </DevErrorBoundary>

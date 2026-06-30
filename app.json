@@ -15,7 +15,16 @@
       "supportsTablet": true,
       "bundleIdentifier": "com.sportivelogic.pitchside",
       "infoPlist": {
-        "ITSAppUsesNonExemptEncryption": false
+        "ITSAppUsesNonExemptEncryption": false,
+        "UIBackgroundModes": [
+          "remote-notification"
+        ]
+      },
+      "entitlements": {
+        "aps-environment": "production",
+        "com.apple.security.application-groups": [
+          "group.com.sportivelogic.pitchside.onesignal"
+        ]
       }
     },
     "android": {
@@ -31,6 +40,12 @@
       "bundler": "metro"
     },
     "plugins": [
+      [
+        "onesignal-expo-plugin",
+        {
+          "mode": "production"
+        }
+      ],
       "expo-font",
       "expo-router",
       "expo-web-browser",
@@ -42,7 +57,8 @@
     },
     "extra": {
       "router": {},
-      "backendUrl": "https://ggr5mw498a2953kypgkfkkwsubrg5vu2.app.specular.dev"
+      "backendUrl": "https://ggr5mw498a2953kypgkfkkwsubrg5vu2.app.specular.dev",
+      "oneSignalAppId": "b0b1dae7-3bf7-4801-90be-a1fe1e4c4dcb"
     }
   }
 }

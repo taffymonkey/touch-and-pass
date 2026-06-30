@@ -18,6 +18,7 @@ import { supabase } from '@/app/integrations/supabase/client';
 import FixtureRow, { FixtureLite } from '@/components/rugby/FixtureRow';
 import CompetitionHeader from '@/components/rugby/CompetitionHeader';
 import SkeletonLoader from '@/components/rugby/SkeletonLoader';
+import { NotificationBell } from "@/components/NotificationBell";
 import {
   DARK_BG, CARD_BG, BORDER_COLOR, TEXT_PRIMARY, TEXT_SECONDARY,
   BRAND_GREEN, LIVE_RED,
@@ -200,9 +201,7 @@ export default function ScoresScreen() {
           <TouchableOpacity style={styles.iconBtn} onPress={toggleSearch}>
             <Text style={styles.iconText}>🔍</Text>
           </TouchableOpacity>
-          <TouchableOpacity style={styles.iconBtn} onPress={() => console.log('[Scores] Bell pressed')}>
-            <Text style={styles.iconText}>🔔</Text>
-          </TouchableOpacity>
+          <NotificationBell />
         </View>
       </View>
 
