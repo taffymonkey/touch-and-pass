@@ -240,30 +240,6 @@ export default function PlayerProfileScreen() {
     );
   }
 
-  // Stats computation (scoped)
-  const uniqueFixtureIds = new Set(filteredEvents.map(e => e.fixture?.id).filter(Boolean));
-  const appearances = uniqueFixtureIds.size;
-  const tries = filteredEvents.filter(e => e.event_type === 'try').length;
-  const conversions = filteredEvents.filter(e => e.event_type === 'conversion').length;
-  const penalties = filteredEvents.filter(e => e.event_type === 'penalty').length;
-  const dropGoals = filteredEvents.filter(e => e.event_type === 'drop_goal').length;
-  const yellowCards = filteredEvents.filter(e => e.event_type === 'yellow_card').length;
-  const redCards = filteredEvents.filter(e => e.event_type === 'red_card').length;
-  const points = tries * 5 + conversions * 2 + penalties * 3 + dropGoals * 3;
-
-  // Recent 5 fixtures (scoped)
-  const fixtureMap = new Map<string, { fixture: PlayerEvent['fixture']; events: PlayerEvent[] }>();
-  filteredEvents.forEach(e => {
-    if (!e.fixture?.id) return;
-    if (!fixtureMap.has(e.fixture.id)) {
-      fixtureMap.set(e.fixture.id, { fixture: e.fixture, events: [] });
-    }
-    fixtureMap.get(e.fixture.id)!.events.push(e);
-  });
-  const recentFixtures = Array.from(fixtureMap.values())
-    .sort((a, b) => new Date(b.fixture?.match_date ?? '').getTime() - new Date(a.fixture?.match_date ?? '').getTime())
-    .slice(0, 5);
-
   const primaryReg = registrations.find(r => r.is_primary) ?? registrations[0];
   const primaryTeam = primaryReg?.team;
   const primaryColor = primaryTeam?.primary_color ?? BRAND_GREEN;
@@ -299,6 +275,30 @@ export default function PlayerProfileScreen() {
     }
     return true; // career — all events
   });
+
+  // Stats computation (scoped)
+  const uniqueFixtureIds = new Set(filteredEvents.map(e => e.fixture?.id).filter(Boolean));
+  const appearances = uniqueFixtureIds.size;
+  const tries = filteredEvents.filter(e => e.event_type === 'try').length;
+  const conversions = filteredEvents.filter(e => e.event_type === 'conversion').length;
+  const penalties = filteredEvents.filter(e => e.event_type === 'penalty').length;
+  const dropGoals = filteredEvents.filter(e => e.event_type === 'drop_goal').length;
+  const yellowCards = filteredEvents.filter(e => e.event_type === 'yellow_card').length;
+  const redCards = filteredEvents.filter(e => e.event_type === 'red_card').length;
+  const points = tries * 5 + conversions * 2 + penalties * 3 + dropGoals * 3;
+
+  // Recent 5 fixtures (scoped)
+  const fixtureMap = new Map<string, { fixture: PlayerEvent['fixture']; events: PlayerEvent[] }>();
+  filteredEvents.forEach(e => {
+    if (!e.fixture?.id) return;
+    if (!fixtureMap.has(e.fixture.id)) {
+      fixtureMap.set(e.fixture.id, { fixture: e.fixture, events: [] });
+    }
+    fixtureMap.get(e.fixture.id)!.events.push(e);
+  });
+  const recentFixtures = Array.from(fixtureMap.values())
+    .sort((a, b) => new Date(b.fixture?.match_date ?? '').getTime() - new Date(a.fixture?.match_date ?? '').getTime())
+    .slice(0, 5);
 
   const fullName = `${player.first_name} ${player.last_name}`.toUpperCase();
   const jerseyNum = player.jersey_number?.toString() ?? '';
