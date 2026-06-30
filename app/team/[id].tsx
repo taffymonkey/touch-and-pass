@@ -170,7 +170,7 @@ export default function TeamProfileScreen() {
       setIsFavourite(false);
     } else {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      await supabase.from('fan_favourites').upsert({ user_id: user.id, entity_type: 'team', entity_id: id! } as any);
+      await supabase.from('fan_favourites').upsert({ user_id: user.id, entity_type: 'team', entity_id: id!, team_id: id! } as any);
       setIsFavourite(true);
     }
   };

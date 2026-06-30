@@ -130,7 +130,7 @@ export default function TeamsScreen() {
       await supabase
         .from('fan_favourites')
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        .upsert({ user_id: user.id, entity_type: 'team', entity_id: teamId } as any);
+        .upsert({ user_id: user.id, entity_type: 'team', entity_id: teamId, team_id: teamId } as any);
       setFavourites(prev => new Set([...prev, teamId]));
       console.log('[Teams] Added favourite:', teamId);
     }
