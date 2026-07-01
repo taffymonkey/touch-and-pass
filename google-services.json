@@ -7,9 +7,9 @@
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:965884502436:android:6f165a899e0f02113e2131",
+        "mobilesdk_app_id": "1:965884502436:android:5820baeef49859c63e2131",
         "android_client_info": {
-          "package_name": "com.touchandpass.app"
+          "package_name": "com.sportivelogic.fifty22"
         }
       },
       "oauth_client": [],
