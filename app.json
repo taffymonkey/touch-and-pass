@@ -13,20 +13,14 @@
     },
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.sportivelogic.pitchside",
+      "bundleIdentifier": "com.sportivelogic.fiftytwentytwo",
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false,
         "UIBackgroundModes": [
           "remote-notification"
         ]
       },
-      "entitlements": {
-        "aps-environment": "production",
-        "com.apple.security.application-groups": [
-          "group.com.sportivelogic.pitchside.onesignal"
-        ]
-      }
-    },
+		},
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/fifty22-light-1024x1024.png",
