@@ -7,9 +7,9 @@
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:965884502436:android:5820baeef49859c63e2131",
+        "mobilesdk_app_id": "1:965884502436:android:9f6f501e3fb1b0303e2131",
         "android_client_info": {
-          "package_name": "com.sportivelogic.fifty22"
+          "package_name": "com.sportivelogic.fiftytwentytwo"
         }
       },
       "oauth_client": [],
