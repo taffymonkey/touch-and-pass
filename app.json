@@ -19,8 +19,8 @@
         "UIBackgroundModes": [
           "remote-notification"
         ]
-      },
-		},
+      }
+    },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/fifty22-light-1024x1024.png",
