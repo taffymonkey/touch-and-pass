@@ -32,7 +32,7 @@
         "foregroundImage": "./assets/images/fifty22-light-1024x1024.png",
         "backgroundColor": "#FFFFFF"
       },
-      "package": "com.sportivelogic.pitchside",
+      "package": "com.sportivelogic.fiftytwentytwo",
       "googleServicesFile": "./google-services.json"
     },
     "web": {
