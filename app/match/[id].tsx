@@ -417,30 +417,42 @@ export default function MatchDetailScreen() {
                   <Text style={styles.lineupPos}>Pos</Text>
                   <Text style={[styles.lineupTeamName, styles.lineupTeamNameRight]}>{fixture.away_team?.name}</Text>
                 </View>
-                {homeStarters.map((sel, i) => {
+                {Array.from({ length: Math.max(homeStarters.length, awayStarters.length) }).map((_, i) => {
+                  const home = homeStarters[i];
                   const away = awayStarters[i];
-                  const playerName = sel.player ? `${sel.player.first_name} ${sel.player.last_name}` : 'TBC';
-                  const awayName = away?.player ? `${away.player.first_name} ${away.player.last_name}` : '';
-                  const pos = sel.player?.position?.substring(0, 3).toUpperCase() ?? `${sel.jersey_number ?? i + 1}`;
+                  const playerName = home?.player ? `${home.player.first_name} ${home.player.last_name}` : home ? 'TBC' : '';
+                  const awayName = away?.player ? `${away.player.first_name} ${away.player.last_name}` : away ? 'TBC' : '';
+                  const pos = home?.player?.position?.substring(0, 3).toUpperCase()
+                    ?? home?.jersey_number?.toString()
+                    ?? away?.jersey_number?.toString()
+                    ?? `${i + 1}`;
                   return (
-                    <View key={sel.id} style={styles.lineupRow}>
+                    <View key={home?.id ?? away?.id ?? `starter-${i}`} style={styles.lineupRow}>
                       <View style={styles.lineupPlayerLeft}>
-                        <PlayerAvatar name={playerName} photoUrl={sel.player?.photo_url} />
-                        <Text style={styles.lineupPlayerName} numberOfLines={1}>
-                          {playerName}{sel.is_captain ? ' (C)' : ''}
-                        </Text>
+                        {home ? (
+                          <>
+                            <PlayerAvatar name={playerName} photoUrl={home.player?.photo_url} />
+                            <Text style={styles.lineupPlayerName} numberOfLines={1}>
+                              {playerName}{home.is_captain ? ' (C)' : ''}
+                            </Text>
+                          </>
+                        ) : (
+                          <View style={styles.lineupPlaceholder} />
+                        )}
                       </View>
                       <View style={styles.lineupPosBadge}>
                         <Text style={styles.lineupPosBadgeText}>{pos}</Text>
                       </View>
                       <View style={styles.lineupPlayerRight}>
-                        {away && (
+                        {away ? (
                           <>
                             <Text style={[styles.lineupPlayerName, styles.lineupPlayerNameRight]} numberOfLines={1}>
                               {awayName}{away.is_captain ? ' (C)' : ''}
                             </Text>
                             <PlayerAvatar name={awayName} photoUrl={away.player?.photo_url} />
                           </>
+                        ) : (
+                          <View style={styles.lineupPlaceholder} />
                         )}
                       </View>
                     </View>
@@ -451,25 +463,35 @@ export default function MatchDetailScreen() {
                     <Text style={styles.benchLabel}>BENCH</Text>
                   </View>
                 )}
-                {homeBench.map((sel, i) => {
+                {Array.from({ length: Math.max(homeBench.length, awayBench.length) }).map((_, i) => {
+                  const home = homeBench[i];
                   const away = awayBench[i];
-                  const playerName = sel.player ? `${sel.player.first_name} ${sel.player.last_name}` : 'TBC';
-                  const awayName = away?.player ? `${away.player.first_name} ${away.player.last_name}` : '';
+                  const playerName = home?.player ? `${home.player.first_name} ${home.player.last_name}` : home ? 'TBC' : '';
+                  const awayName = away?.player ? `${away.player.first_name} ${away.player.last_name}` : away ? 'TBC' : '';
+                  const jerseyNum = home?.jersey_number ?? away?.jersey_number ?? '—';
                   return (
-                    <View key={sel.id} style={[styles.lineupRow, styles.lineupRowBench]}>
+                    <View key={home?.id ?? away?.id ?? `bench-${i}`} style={[styles.lineupRow, styles.lineupRowBench]}>
                       <View style={styles.lineupPlayerLeft}>
-                        <PlayerAvatar name={playerName} photoUrl={sel.player?.photo_url} bench />
-                        <Text style={styles.lineupPlayerName} numberOfLines={1}>{playerName}</Text>
+                        {home ? (
+                          <>
+                            <PlayerAvatar name={playerName} photoUrl={home.player?.photo_url} bench />
+                            <Text style={styles.lineupPlayerName} numberOfLines={1}>{playerName}</Text>
+                          </>
+                        ) : (
+                          <View style={styles.lineupPlaceholder} />
+                        )}
                       </View>
                       <View style={styles.lineupPosBadge}>
-                        <Text style={styles.lineupPosBadgeText}>{sel.jersey_number ?? '—'}</Text>
+                        <Text style={styles.lineupPosBadgeText}>{jerseyNum}</Text>
                       </View>
                       <View style={styles.lineupPlayerRight}>
-                        {away && (
+                        {away ? (
                           <>
                             <Text style={[styles.lineupPlayerName, styles.lineupPlayerNameRight]} numberOfLines={1}>{awayName}</Text>
                             <PlayerAvatar name={awayName} photoUrl={away.player?.photo_url} bench />
                           </>
+                        ) : (
+                          <View style={styles.lineupPlaceholder} />
                         )}
                       </View>
                     </View>
@@ -804,6 +826,7 @@ const styles = StyleSheet.create({
   lineupPosBadgeText: { color: '#fff', fontSize: 10, fontWeight: '800' },
   lineupPlayerName: { flex: 1, color: TEXT_PRIMARY, fontSize: 12, fontWeight: '600' },
   lineupPlayerNameRight: { textAlign: 'right' },
+  lineupPlaceholder: { flex: 1, height: 28 },
   playerInitials: { width: 28, height: 28, borderRadius: 14, backgroundColor: BRAND_GREEN, alignItems: 'center', justifyContent: 'center' },
   playerInitialsBench: { backgroundColor: '#2d4a33' },
   playerInitialsText: { color: '#fff', fontSize: 10, fontWeight: '700' },
