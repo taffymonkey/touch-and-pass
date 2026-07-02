@@ -83,6 +83,25 @@ function formatTime(dateStr: string): string {
 
 const TABS = ['Info', 'Line-up', 'Live', 'Stats'];
 
+function PlayerAvatar({ name, photoUrl, bench = false }: { name: string; photoUrl?: string | null; bench?: boolean }) {
+  const size = 28;
+  if (photoUrl) {
+    return (
+      <Image
+        source={{ uri: photoUrl }}
+        style={[styles.playerAvatar, bench && styles.playerAvatarBench, { width: size, height: size, borderRadius: size / 2 }]}
+        resizeMode="cover"
+      />
+    );
+  }
+  const initials = name.split(' ').map(w => w[0]).join('').substring(0, 2);
+  return (
+    <View style={[styles.playerInitials, bench && styles.playerInitialsBench]}>
+      <Text style={styles.playerInitialsText}>{initials}</Text>
+    </View>
+  );
+}
+
 export default function MatchDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
@@ -96,25 +115,6 @@ export default function MatchDetailScreen() {
   const tabAnim = useRef(new Animated.Value(0)).current;
   const livePulse = useRef(new Animated.Value(1)).current;
   const statsAnim = useRef(new Animated.Value(0)).current;
-
-  const PlayerAvatar = ({ name, photoUrl, bench = false }: { name: string; photoUrl?: string | null; bench?: boolean }) => {
-    const size = 28;
-    if (photoUrl) {
-      return (
-        <Image
-          source={{ uri: photoUrl }}
-          style={[styles.playerAvatar, bench && styles.playerAvatarBench, { width: size, height: size, borderRadius: size / 2 }]}
-          resizeMode="cover"
-        />
-      );
-    }
-    const initials = name.split(' ').map(w => w[0]).join('').substring(0, 2);
-    return (
-      <View style={[styles.playerInitials, bench && styles.playerInitialsBench]}>
-        <Text style={styles.playerInitialsText}>{initials}</Text>
-      </View>
-    );
-  };
 
   useEffect(() => {
     const anim = Animated.loop(
