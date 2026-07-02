@@ -13,12 +13,7 @@ import { StatusBar } from 'expo-status-bar';
 import { WidgetProvider } from '@/contexts/WidgetContext';
 import { AuthProvider } from '@/contexts/AuthContext';
 import { NotificationProvider } from "@/contexts/NotificationContext";
-import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { DARK_BG, CARD_BG, BORDER_COLOR, TEXT_PRIMARY, BRAND_GREEN } from '@/constants/Colors';
-
-const DevErrorBoundary = __DEV__
-  ? ErrorBoundary
-  : ({ children }: { children: React.ReactNode }) => <>{children}</>;
 
 SplashScreen.preventAutoHideAsync();
 
@@ -61,29 +56,29 @@ export default function RootLayout() {
   }, [networkState.isConnected, networkState.isInternetReachable]);
 
   return (
-    <DevErrorBoundary>
+    <>
       <StatusBar style="light" animated />
       <ThemeProvider value={RugbyDarkTheme}>
         <SafeAreaProvider>
           <AuthProvider>
-        <NotificationProvider>
-            <WidgetProvider>
-              <GestureHandlerRootView>
-                <Stack>
-                  <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-                  <Stack.Screen name="(auth)" options={{ headerShown: false }} />
-                  <Stack.Screen name="match/[id]" options={{ headerShown: false }} />
-                  <Stack.Screen name="team/[id]" options={{ headerShown: false }} />
-                  <Stack.Screen name="player/[id]" options={{ headerShown: false }} />
-                  <Stack.Screen name="notification-preferences" options={{ title: 'Notification Preferences', headerShown: true }} />
-                </Stack>
-                <SystemBars style="light" />
-              </GestureHandlerRootView>
-            </WidgetProvider>
-          </NotificationProvider>
-        </AuthProvider>
+            <NotificationProvider>
+              <WidgetProvider>
+                <GestureHandlerRootView>
+                  <Stack>
+                    <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+                    <Stack.Screen name="(auth)" options={{ headerShown: false }} />
+                    <Stack.Screen name="match/[id]" options={{ headerShown: false }} />
+                    <Stack.Screen name="team/[id]" options={{ headerShown: false }} />
+                    <Stack.Screen name="player/[id]" options={{ headerShown: false }} />
+                    <Stack.Screen name="notification-preferences" options={{ title: 'Notification Preferences', headerShown: true }} />
+                  </Stack>
+                  <SystemBars style="light" />
+                </GestureHandlerRootView>
+              </WidgetProvider>
+            </NotificationProvider>
+          </AuthProvider>
         </SafeAreaProvider>
       </ThemeProvider>
-    </DevErrorBoundary>
+    </>
   );
 }

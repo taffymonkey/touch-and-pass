@@ -241,6 +241,7 @@ export default function MatchDetailScreen() {
 
   const homeId = fixture.home_team?.id ?? '';
   const awayId = fixture.away_team?.id ?? '';
+  console.log('[Match] fixture.home_team?.id:', fixture.home_team?.id, '| fixture.away_team?.id:', fixture.away_team?.id);
   const homeScore = computeScore(events, homeId);
   const awayScore = computeScore(events, awayId);
   const isLive = fixture.status === 'in_progress';
@@ -407,9 +408,15 @@ export default function MatchDetailScreen() {
         )}
 
         {/* Line-up tab */}
+        {activeTab === 1 && (() => {
+          console.log('[Match] Lineup tab render — homeId:', homeId, 'awayId:', awayId);
+          console.log('[Match] Lineup tab — selections.length:', selections.length, 'team_ids:', selections.map(s => s.team_id));
+          console.log('[Match] Lineup tab — homeStarters.length:', homeStarters.length, 'awayStarters.length:', awayStarters.length);
+          return null;
+        })()}
         {activeTab === 1 && (
           <View style={styles.lineupTab}>
-            {selections.length === 0 ? (
+            {(homeId === '' && awayId === '') || selections.length === 0 ? (
               <View style={styles.empty}>
                 <Text style={styles.emptyText}>Team not selected yet</Text>
               </View>
