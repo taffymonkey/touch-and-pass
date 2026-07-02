@@ -94,7 +94,10 @@ function PlayerAvatar({ name, photoUrl, bench = false }: { name: string; photoUr
       />
     );
   }
-  const initials = name.split(' ').map(w => w[0]).join('').substring(0, 2);
+  if (!name || name.trim() === '') {
+    return <View style={[styles.playerInitials, bench && styles.playerInitialsBench]} />;
+  }
+  const initials = name.split(' ').filter(w => w.length > 0).map(w => w[0]).join('').substring(0, 2);
   return (
     <View style={[styles.playerInitials, bench && styles.playerInitialsBench]}>
       <Text style={styles.playerInitialsText}>{initials}</Text>
